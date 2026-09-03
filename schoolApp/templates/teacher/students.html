@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block  title%}Meus Estudantes{% endblock  %}
+{% block  content%}
+
+
+    
+
+     <div class="d-flex justify-content-between">
+            <h2>Alunos da Turma</h2>
+            
+            <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary ">
+            Voltar
+           </a>
+     </div>
+     <hr>
+
+
+     <div class="row d-flex justify-content-between mb-4">
+        <div class="col-md-6 col-sm-12">
+            <p class="text-muted mb-0">
+                Disciplina:
+                <strong>{{ assignment.subject.name }}</strong>
+            </p>
+
+            <p class="text-muted mb-0">
+                Turma:
+                <strong>{{ assignment.group.designation}}</strong>
+            </p>
+
+            <p class="text-muted mb-0">
+                Ano Letivo:
+                <strong>{{ assignment.group.academic_year}}</strong>
+            </p>
+        </div>
+        <div class="col-md-6 col-sm-12">
+
+            <p class="text-muted mb-0">
+                Curso:
+                <strong>{{ assignment.group.course.name }}</strong>
+            </p>
+
+            <p class="text-muted mb-0 ">
+                Periodo:
+                <strong>{{ assignment.group.shit }}</strong>
+            </p>
+            <p class="text-muted ">
+                Professor:
+                <strong>{{ teacher.user.get_full_name }}</strong>
+            </p>
+        </div>
+    </div>
+
+       
+
+       
+
+ 
+
+
+    {% if enrollments %}
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                <strong>Lista de Alunos</strong>
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for enrollment in enrollments %}
+
+                            <tr>
+
+                                <td>
+                                    {{ enrollment.student.id }}
+                                </td>
+
+                                <td>
+                                    {{ enrollment.student.user.get_full_name }}
+                                </td>
+
+                                <td>
+                                    {{ enrollment.student.user.email }}
+                                </td>
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'teacher_student_grades' assignment.id enrollment.student.id %}"
+                                        class="btn btn-sm btn-primary"
+                                    >
+                                        Ver notas
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-info">
+            Não existem alunos matriculados nesta turma.
+        </div>
+
+    {% endif %}
+
+
+{% endblock  %}

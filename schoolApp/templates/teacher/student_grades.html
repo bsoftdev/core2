@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Notas | {{ enrollment.student.user.get_full_name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- ===================================================== -->
+    <!-- CABEÇALHO -->
+    <!-- ===================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-2">
+                Notas do Aluno
+            </h2>
+
+            <p class="mb-1">
+                <strong>Aluno:</strong>
+                {{ enrollment.student.user.get_full_name }}
+            </p>
+
+            <p class="mb-1">
+                <strong>Turma:</strong>
+                {{ assignment.group }}
+            </p>
+
+            <p class="mb-0">
+                <strong>Disciplina:</strong>
+                {{ assignment.subject }}
+            </p>
+
+        </div>
+
+        <div>
+
+            <a
+                href="{% url 'teacher_students' assignment.id %}"
+                class="btn btn-secondary"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Voltar
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- INFORMAÇÕES DO ALUNO -->
+    <!-- ===================================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4">
+
+                    <small class="text-muted">
+                        Aluno
+                    </small>
+
+                    <h5 class="mb-0">
+                        {{ enrollment.student.user.get_full_name }}
+                    </h5>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <small class="text-muted">
+                        Turma
+                    </small>
+
+                    <h5 class="mb-0">
+                        {{ assignment.group }}
+                    </h5>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <small class="text-muted">
+                        Disciplina
+                    </small>
+
+                    <h5 class="mb-0">
+                        {{ assignment.subject }}
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- AVALIAÇÕES -->
+    <!-- ===================================================== -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                Avaliações
+            </h5>
+
+            <span class="badge bg-primary">
+                {{ evaluation_data|length }} avaliações
+            </span>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+            {% if evaluation_data %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover table-striped align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>Avaliação</th>
+
+                                <th>Tipo</th>
+
+                                <th>Peso</th>
+
+                                <th>Data</th>
+
+                                <th>Nota</th>
+
+                                <th class="text-center">
+                                    Ação
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in evaluation_data %}
+
+                                <tr>
+
+                                    <!-- Número -->
+                                    <td>
+                                        {{ forloop.counter }}
+                                    </td>
+
+
+                                    <!-- Avaliação -->
+                                    <td>
+
+                                        <strong>
+                                            {{ item.evaluation.name }}
+                                        </strong>
+
+                                    </td>
+
+
+                                    <!-- Tipo -->
+                                    <td>
+
+                                        <span class="badge bg-secondary">
+
+                                            {{ item.evaluation.get_type_display }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- Peso -->
+                                    <td>
+
+                                        {{ item.evaluation.gradeWeight }}
+
+                                    </td>
+
+
+                                    <!-- Data -->
+                                    <td>
+
+                                        {% if item.evaluation.date %}
+
+                                            {{ item.evaluation.date|date:"d/m/Y" }}
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                —
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- Nota -->
+                                    <td>
+
+                                        {% if item.grade %}
+
+                                            {% if item.grade.value != None %}
+
+                                                <strong class="text-primary">
+                                                    {{ item.grade.value }}
+                                                </strong>
+
+                                            {% else %}
+
+                                                <span class="text-muted">
+                                                    —
+                                                </span>
+
+                                            {% endif %}
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                —
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- Ação -->
+                                    <td class="text-center">
+
+                                        {% if item.grade %}
+
+                                            <a
+                                                href="#"
+                                                class="btn btn-sm btn-warning"
+                                            >
+                                                <i class="bi bi-pencil"></i>
+                                                Editar
+                                            </a>
+
+                                        {% else %}
+
+                                            <a
+                                                href="#"
+                                                class="btn btn-sm btn-primary"
+                                            >
+                                                <i class="bi bi-plus-circle"></i>
+                                                Lançar nota
+                                            </a>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="p-4">
+
+                    <div class="alert alert-info mb-0">
+
+                        <i class="bi bi-info-circle"></i>
+
+                        Não existem avaliações cadastradas
+                        para esta disciplina e turma.
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- RESUMO ACADÉMICO -->
+    <!-- ===================================================== -->
+
+    <div class="row mt-4">
+
+        <!-- Média -->
+        <div class="col-md-6 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Média Ponderada
+                    </small>
+
+                    <h3 class="mt-2 mb-0">
+                        —
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Situação -->
+        <div class="col-md-6 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Situação
+                    </small>
+
+                    <h3 class="mt-2 mb-0">
+                        —
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

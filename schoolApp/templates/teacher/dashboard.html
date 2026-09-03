@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title  %} Area do Professor{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- CABEÇALHO -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+                Olá, {{ teacher.user.get_full_name }} ({{teacher.id}})
+            </h2>
+
+            <p class="text-muted mb-0">
+                Painel do Professor
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- CARDS -->
+
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Disciplinas
+                    </h6>
+
+                    <h2>
+                        {{ assignments|length }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Turmas
+                    </h6>
+
+                    <h2>
+                        {{ assignments|length }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Professor
+                    </h6>
+
+                    <h5>
+                        {{ teacher.user.get_full_name }}
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- DISCIPLINAS -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <h5 class="mb-0">
+                Minhas Disciplinas e Turmas
+            </h5>
+
+        </div>
+
+
+        <div class="card-body">
+
+            {% if assignments %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Disciplina
+                                </th>
+
+                                <th>
+                                    Turma
+                                </th>
+
+                                <th>
+                                    Ações
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for assignment in assignments %}
+
+                            <tr>
+
+                                <td>
+
+                                    {{ assignment.subject }}
+
+                                </td>
+
+
+                                <td>
+
+                                    {{ assignment.group }}
+
+                                </td>
+
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'teacher_students' assignment.id %}"
+                                        class="btn btn-sm btn-primary"
+                                    >
+                                        Ver alunos
+                                    </a>
+
+                                    <a
+                                        href="#"
+                                        class="btn btn-sm btn-success"
+                                    >
+                                        Lançar notas
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-info">
+
+                    Você ainda não possui
+                    disciplinas ou turmas atribuídas.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

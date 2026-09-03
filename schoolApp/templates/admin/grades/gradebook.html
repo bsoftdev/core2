@@ -1,0 +1,154 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module" style="background: #fff; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+        
+        <!-- Cabeçalho Institucional Estilo Angolano -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">BSOFT TECHNOLOGIES</h2>
+            <h3 style="margin: 5px 0 15px 0; font-size: 15px; color: #555;">República de Angola</h3>
+            <h3 style="margin: 5px 0 15px 0; font-size: 15px; color: #555;">Ministério da Educação</h3>
+            <h3 style="margin: 5px 0 15px 0; font-size: 15px; color: #555;">Pauta de Provas Académica</h3>
+            <h3 style="margin: 5px 0 15px 0; font-size: 15px; color: #555;">Instituto Politécnico Bsoft Technologies</h3>
+            <hr style="border: 0; border-top: 2px solid #333; width: 300px; margin: 0 auto;">
+        </div>
+
+        <!-- Metadados da Turma/Pauta -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #417690;">
+            <div>
+                <p style="margin: 4px 0;"><strong>Curso:</strong> {{ gradebook.group.course.name }}</p>
+                <p style="margin: 4px 0;"><strong>Turma:</strong> {{ gradebook.group.designation }}</p>
+            </div>
+            <div>
+                <p style="margin: 4px 0;"><strong>Disciplina:</strong> {{ gradebook.subject.name }}</p>
+                <p style="margin: 4px 0;"><strong>Ano Letivo:</strong> {{ gradebook.academic_year.designation }}</p>
+            </div>
+        </div>
+
+        <!-- Botão Útil de Impressão -->
+        <div style="margin-bottom: 15px; text-align: right;" class="no-print">
+            <button onclick="window.print();" style="background: #417690; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                🖨️ Imprimir Pauta
+            </button>
+        </div>
+
+        <!-- Tabela Matricial Horizontal de Notas -->
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 800px; font-size: 13px; border: 1px solid #ccc;">
+                <thead>
+                    <!-- Primeira Linha do Cabeçalho Duplo -->
+                    <tr style="background: #417690; color: white; text-align: center;">
+                        <th rowspan="2" style="border: 1px solid #ddd; padding: 10px; width: 40px;">Nº</th>
+                        <th rowspan="2" style="border: 1px solid #ddd; padding: 10px; text-align: left;">Nome Completo do Estudante</th>
+                        <th colspan="{{ avaliations|length|default:1 }}" style="border: 1px solid #ddd; padding: 6px;">Avaliações Contínuas / Provas</th>
+                        <th rowspan="2" style="border: 1px solid #ddd; padding: 10px; width: 70px;">Média</th>
+                        <th rowspan="2" style="border: 1px solid #ddd; padding: 10px; width: 120px;">Situação Final</th>
+                    </tr>
+                    <!-- Segunda Linha: nomes das avaliações, sempre a partir de 'avaliations', nunca de 'results' -->
+                    <tr style="background: #edf4f8; color: #333; text-align: center; font-size: 11px;">
+                        {% for av in avaliations %}
+                            <th style="border: 1px solid #ccc; padding: 6px;">{{ av.name }}</th>
+                        {% empty %}
+                            <th style="border: 1px solid #ccc; padding: 6px;">Nenhuma avaliação cadastrada</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr style="background: {% cycle '#fff' '#fdfdfd' %}; text-align: center;">
+                        
+                        <!-- Número de Ordem -->
+                        <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold; color: #666;">
+                            {{ forloop.counter }}
+                        </td>
+
+                        <!-- Nome e ID do Aluno -->
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: left;">
+                            <strong style="color: #333; font-size: 13px;">{{ result.student.user.get_full_name|upper }}</strong>
+                            <span style="display: block; font-size: 10px; color: #888;">Nº Matricula: {{ result.student.id }}</span>
+                        </td>
+
+                        <!-- Notas Alinhadas Horizontalmente -->
+                        {% for grade in result.grades %}
+                            <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold; font-size: 14px;
+                                       color: {% if grade.value >= 10 %}#20639B{% else %}#CD4343{% endif %};">
+                                {{ grade.value|floatformat:1|default:"—" }}
+                            </td>
+                        {% empty %}
+                            <!-- Células vazias caso o aluno não possua registos correspondentes -->
+                            <td style="border: 1px solid #ddd; padding: 8px; color: #ccc;">—</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; color: #ccc;">—</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; color: #ccc;">—</td>
+                        {% endfor %}
+
+                        <!-- Média Final Estilizada (Azul se positivo, Vermelho se negativo) -->
+                        <td style="border: 1px solid #ddd; padding: 8px; font-size: 14px; font-weight: bold; background: #fbfbfb;
+                                   color: {% if result.avarage >= 10 %}#1b5e20{% else %}#b71c1c{% endif %};">
+                            {% if result.avarage is not None %}
+                                {{ result.avarage|floatformat:1 }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <!-- Situação Académica do Aluno -->
+                        <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;">
+                            {% if result.situation == 'APROVADO' %}
+                                <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 12px; display: inline-block;">✓ APROVADO</span>
+                            {% elif result.situation == 'RECURSO' %}
+                                <span style="background: #fff3e0; color: #ef6c00; padding: 4px 8px; border-radius: 12px; display: inline-block;">⚠ RECURSO</span>
+                            {% elif result.situation == 'REPROVADO' %}
+                                <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 12px; display: inline-block;">✕ REPROVADO</span>
+                            {% elif result.situation == 'PENDENTE' %}
+                                <span style="background: #fffde7; color: #f57f17; padding: 4px 8px; border-radius: 12px; display: inline-block;">PENDENTE</span>
+                            {% elif result.situation == 'SEM_NOTAS' %}
+                                <span style="background: #f5f5f5; color: #757575; padding: 4px 8px; border-radius: 12px; display: inline-block;">SEM NOTAS</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="border: 1px solid #ddd; padding: 20px; text-align: center; color: #888; font-style: italic;">
+                            Nenhum estudante matriculado nesta turma para o ano letivo selecionado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Rodapé para assinaturas oficiais exigidas em Angola -->
+        <div style="margin-top: 50px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; text-align: center; font-size: 12px;">
+            <div>
+                <p>O(A) Docente</p>
+                <div style="border-bottom: 1px solid #666; width: 220px; margin: 40px auto 5px auto;"></div>
+                <p style="color: #777; font-size: 11px;">Assinatura Legível</p>
+            </div>
+            <div>
+                <p>A Direção Pedagógica</p>
+                <div style="border-bottom: 1px solid #666; width: 220px; margin: 40px auto 5px auto;"></div>
+                <p style="color: #777; font-size: 11px;">Carimbo e Assinatura</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Regras CSS para Otimizar a Impressão em Papel A4 Horizontal -->
+<style>
+    @media print {
+        body { background: white; color: black; font-size: 12px; }
+        .no-print, #header, .breadcrumbs, .submit-row { display: none !important; }
+        .module { box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+        table { border: 1px solid #000 !important; page-break-inside: avoid; }
+        th, td { border: 1px solid #000 !important; padding: 5px !important; }
+        th { background: #f2f2f2 !important; color: #000 !important; }
+        @page { size: landscape; margin: 1cm; }
+    }
+
+
+    
+</style>
+{% endblock %}

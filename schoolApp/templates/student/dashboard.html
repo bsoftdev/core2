@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Area do Estuante{% endblock%}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <h1>
+        Olá, {{ student.user.get_full_name }} 
+    </h1>
+
+    <p class="text-muted">
+        Área do Aluno
+    </p>
+
+
+    <div class="row mt-4">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>
+                        Meu Perfil
+                    </h5>
+
+                    <p>
+                        Matrícula:
+                        {{ student.id }}
+                    </p>
+
+                    <a
+                        href="#"
+                        class="btn btn-primary"
+                    >
+                        Ver Perfil
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>
+                        Minhas Notas
+                    </h5>
+
+                    <p>
+                        Consulte suas notas
+                        acadêmicas.
+                    </p>
+
+                    <a
+                        href="#"
+                        class="btn btn-success"
+                    >
+                        Ver Notas
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>
+                        Minha Pauta
+                    </h5>
+
+                    <p>
+                        Consulte seus resultados
+                        acadêmicos.
+                    </p>
+
+                    <a
+                        href="#"
+                        class="btn btn-secondary"
+                    >
+                        Ver Pauta
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
