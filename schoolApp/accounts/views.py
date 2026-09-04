@@ -12,7 +12,6 @@ from grades.models import Evaluation, Grade
 from .models import Student, Teacher
 
 
-
 # LOGIN
 def login_view(request):
 
@@ -69,7 +68,6 @@ def dashboard(request):
             'teacher_dashboard'
         )
 
-
     # ESTUDANTE
     if user.groups.filter(name='Estudantes').exists():
 
@@ -81,7 +79,7 @@ def dashboard(request):
     # Usuário sem perfil
     logout(request)
 
-    messages.error(request, 'Este usuário não possui um perfil válido.')
+    messages.error(request, 'Este usuário não possui um perfil válido.Contactar o Adminastrador do Sistema')
 
     return redirect('login')
 
@@ -143,7 +141,7 @@ def teacher_students(request, assignment_id):
     )
 
 
-#view para tela de lancar nota de alunos
+#view para tela de lancar nota de aluno
 @teacher_required
 def teacher_student_grades(request, assignment_id, student_id):
 
@@ -178,10 +176,11 @@ def teacher_student_grades(request, assignment_id, student_id):
     grades = Grade.objects.filter(
         enrollment=enrollment,
         avaluation__in=evaluations
+        
     ).select_related(
         'avaluation'
     )
-
+    
     # Organizar notas por avaliação
     grades_by_evaluation = {
         grade.avaluation_id: grade
@@ -209,3 +208,111 @@ def teacher_student_grades(request, assignment_id, student_id):
             'evaluation_data': evaluation_data,
         }
     )
+
+#view para lançar notas
+@teacher_required
+def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
+
+    teacher = request.user.teachers
+
+    #buscar atribuição exata do professor
+    assignment = get_object_or_404(
+        TeacherAssignment.objects.select_related('group','subject'),
+        id=assignment_id,
+        teacher = teacher
+    )
+    #verificar de o aluno pertence a turma 
+    enrollment = get_object_or_404(
+        Enrollment,
+        student_id=student_id,
+        group=assignment.group
+    )
+
+    #buscar avaliacão exata
+    evaluation = get_object_or_404(
+        Evaluation,
+        id = evaluation_id,
+        group = assignment.group,
+        subject = assignment.subject,
+        is_active = True
+    )
+
+    #verificar se o estudante já tem  uma nota para essa avaliação
+    existing_grade = Grade.objects.filter(
+        enrollment = enrollment,
+        avaluation = evaluation
+    ).first()
+
+    if request.method == 'POST':
+        value = request.POST.get('value')
+        observation = request.POST.get('observation')
+
+        #verificar se foi informado uma nota no formulario
+        if value == '' or value is None:
+            messages.error(request,'Informe a nota do aluno')
+            
+            return redirect(
+                    'teacher_add_grade',
+                    assignmnet_id = assignment.id,
+                    student_id = enrollmrnt.student.id,
+                    evaluation_id = evaluation.id
+            )
+        try:
+            value = float(value)
+
+        except ValueError:
+            messages.error(request,'Informe uma nota válida')
+
+            return redirect(
+                    'teacher_add_grade',
+                    assignmnet_id = assignment.id,
+                    student_id = enrollmrnt.student.id,
+                    evaluation_id = evaluation.id
+            )
+
+        #validadar intervalo da nota [0,20]
+        if value < 0 or value > 20:
+
+            messages.error(request,'A nota deve estar entre 0 e 20')
+
+            return redirect(
+                    'teacher_add_grade',
+                    assignmnet_id = assignment.id,
+                    student_id = enrollmrnt.student.id,
+                    evaluation_id = evaluation.id
+            )
+
+        #CRIAR OU ATUALIZAR A NOTA
+        if existing_grade:
+            existing_grade.value = value
+            existing_grade.observation = observation
+            existing_grade.save()
+
+            messages.success(request, 'Nota atualizada com sucesso!')
+        else:
+            Grade.objects.create(
+                enrollment = enrollment,
+                avaluation = evaluation,
+                value = value,
+                observation = observation
+            )
+
+            messages.sucecess(reuest, 'Nota lançada com sucesso!')
+
+            return redirect(
+                'teacher_student_grades',
+                assignment_id = assignment.id,
+                student_id = enrollment.student.id
+            )
+    return render(
+        request,
+        'teacher/add_grade.html',{
+            'teacher':teacher,
+            'assignment':assignment,
+            'enrollment':enrollment,
+            'evaluation':evaluation,
+            'existing_grade':existing_grade,
+        }
+    )
+    
+

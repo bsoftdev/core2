@@ -6,49 +6,53 @@
 
 {% block content %}
 
-<div class="container py-4">
+ <div class="d-flex justify-content-between">
+            <h2>Notas de Aluno</h2>
+            
+            <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary ">
+            Voltar
+           </a>
+</div>
+     <hr>
 
-    <!-- ===================================================== -->
-    <!-- CABEÇALHO -->
-    <!-- ===================================================== -->
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2 class="mb-2">
-                Notas do Aluno
-            </h2>
-
-            <p class="mb-1">
-                <strong>Aluno:</strong>
-                {{ enrollment.student.user.get_full_name }}
+     <div class="row d-flex justify-content-between mb-4">
+        <div class="col-md-6 col-sm-12">
+            <p class="text-muted mb-0">
+                Aluno:
+                <strong>  {{ enrollment.student.user.get_full_name }}</strong>
+            </p>
+             <p class="text-muted mb-0">
+                Disciplina:
+                <strong>{{ assignment.subject.name }}</strong>
             </p>
 
-            <p class="mb-1">
-                <strong>Turma:</strong>
-                {{ assignment.group }}
+            <p class="text-muted mb-0">
+                Turma:
+                <strong>{{ assignment.group.designation}}</strong>
             </p>
 
-            <p class="mb-0">
-                <strong>Disciplina:</strong>
-                {{ assignment.subject }}
+            <p class="text-muted mb-0">
+                Ano Letivo:
+                <strong>{{ assignment.group.academic_year}}</strong>
             </p>
-
         </div>
+        <div class="col-md-6 col-sm-12">
 
-        <div>
+            <p class="text-muted mb-0">
+                Curso:
+                <strong>{{ assignment.group.course.name }}</strong>
+            </p>
 
-            <a
-                href="{% url 'teacher_students' assignment.id %}"
-                class="btn btn-secondary"
-            >
-                <i class="bi bi-arrow-left"></i>
-                Voltar
-            </a>
-
+            <p class="text-muted mb-0 ">
+                Periodo:
+                <strong>{{ assignment.group.shit }}</strong>
+            </p>
+            <p class="text-muted ">
+                Professor:
+                <strong>{{ teacher.user.get_full_name }}</strong>
+            </p>
         </div>
-
     </div>
 
 
@@ -57,6 +61,15 @@
     <!-- ===================================================== -->
 
     <div class="card shadow-sm mb-4">
+
+        {%  if messages %}
+            {% for mgs in messages %}
+                <div class='alert-box'>
+                     {{mgs}}
+                </div>
+            {% endfor %}
+
+        {% endif %}
 
         <div class="card-body">
 
@@ -255,7 +268,7 @@
                                         {% if item.grade %}
 
                                             <a
-                                                href="#"
+                                                href="{% url 'teacher_add_grade' assignment.id enrollment.student.id  item.evaluation.id%}"
                                                 class="btn btn-sm btn-warning"
                                             >
                                                 <i class="bi bi-pencil"></i>
@@ -265,7 +278,7 @@
                                         {% else %}
 
                                             <a
-                                                href="#"
+                                                href="{% url 'teacher_add_grade' assignment.id enrollment.student.id  item.evaluation.id%}"
                                                 class="btn btn-sm btn-primary"
                                             >
                                                 <i class="bi bi-plus-circle"></i>
@@ -359,6 +372,5 @@
 
     </div>
 
-</div>
 
 {% endblock %}
