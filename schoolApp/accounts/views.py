@@ -249,12 +249,13 @@ def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
 
         #verificar se foi informado uma nota no formulario
         if value == '' or value is None:
+
             messages.error(request,'Informe a nota do aluno')
             
             return redirect(
                     'teacher_add_grade',
                     assignmnet_id = assignment.id,
-                    student_id = enrollmrnt.student.id,
+                    student_id = enrollment.student.id,
                     evaluation_id = evaluation.id
             )
         try:
@@ -266,7 +267,7 @@ def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
             return redirect(
                     'teacher_add_grade',
                     assignmnet_id = assignment.id,
-                    student_id = enrollmrnt.student.id,
+                    student_id = enrollment.student.id,
                     evaluation_id = evaluation.id
             )
 
@@ -278,7 +279,7 @@ def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
             return redirect(
                     'teacher_add_grade',
                     assignmnet_id = assignment.id,
-                    student_id = enrollmrnt.student.id,
+                    student_id = enrollment.student.id,
                     evaluation_id = evaluation.id
             )
 
@@ -297,13 +298,13 @@ def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
                 observation = observation
             )
 
-            messages.sucecess(reuest, 'Nota lançada com sucesso!')
+            messages.success(request, 'Nota lançada com sucesso!')
 
-            return redirect(
-                'teacher_student_grades',
-                assignment_id = assignment.id,
-                student_id = enrollment.student.id
-            )
+        return redirect(
+            'teacher_student_grades',
+            assignment_id = assignment.id,
+            student_id = enrollment.student.id
+        )
     return render(
         request,
         'teacher/add_grade.html',{

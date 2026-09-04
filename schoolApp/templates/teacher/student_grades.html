@@ -62,14 +62,7 @@
 
     <div class="card shadow-sm mb-4">
 
-        {%  if messages %}
-            {% for mgs in messages %}
-                <div class='alert-box'>
-                     {{mgs}}
-                </div>
-            {% endfor %}
-
-        {% endif %}
+       
 
         <div class="card-body">
 
@@ -119,6 +112,18 @@
 
     </div>
 
+
+     {% comment "" %} MESSAGE WHEN ADING OR UPDATING GRADE {% endcomment %}
+        {%  if messages %}
+            {% for massage in messages %}
+                {% if message.level == DEFAULT_MESSAGE_LEVEL.SUCCESS %}
+                <div class='alert alert-success alert-dismissible fade show' role='alert'>
+                     {{massage}}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+        {% endif %}
 
     <!-- ===================================================== -->
     <!-- AVALIAÇÕES -->
