@@ -244,9 +244,18 @@
 
                                             {% if item.grade.value != None %}
 
-                                                <strong class="text-primary">
-                                                    {{ item.grade.value }}
-                                                </strong>
+                                                {% if item.grade.value < 10 %}
+                                                    <strong class="text-danger">
+                                                        {{ item.grade.value }}
+                                                    </strong>
+
+                                                    {% elif item.grade.value >= 10 %}
+                                                    <strong class="text-primary">
+                                                        {{ item.grade.value }}
+                                                    </strong>
+
+                                             {% endif %}
+                                                
 
                                             {% else %}
 
