@@ -163,6 +163,10 @@ def teacher_student_grades(request, assignment_id, student_id):
         student_id=student_id,
         group=assignment.group
     )
+    
+    avarage = enrollment.calculate_avarage(assignment.subject)
+    situation = enrollment.situation(assignment.subject)
+    
 
     # Buscar somente avaliações da disciplina
     # e da turma dessa atribuição
@@ -206,6 +210,8 @@ def teacher_student_grades(request, assignment_id, student_id):
             'enrollment': enrollment,
             'evaluations': evaluations,
             'evaluation_data': evaluation_data,
+            'avarage': avarage,
+            'situation': situation,
         }
     )
 

@@ -9,7 +9,7 @@
  <div class="d-flex justify-content-between">
             <h2>Notas de Aluno</h2>
             
-            <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary ">
+            <a href="{% url 'teacher_students' assignment.id %}" class="btn btn-secondary ">
             Voltar
            </a>
 </div>
@@ -162,7 +162,7 @@
 
                                 <th>Tipo</th>
 
-                                <th>Peso</th>
+                                <th>Peso </th>
 
                                 <th>Data</th>
 
@@ -214,7 +214,7 @@
                                     <!-- Peso -->
                                     <td>
 
-                                        {{ item.evaluation.gradeWeight }}
+                                        {{ item.evaluation.gradeWeight|floatformat:0 }}%
 
                                     </td>
 
@@ -344,21 +344,49 @@
         <!-- Média -->
         <div class="col-md-6 mb-3">
 
-            <div class="card shadow-sm">
+  <div class="card shadow-sm">
 
-                <div class="card-body">
+    <div class="card-body">
 
-                    <small class="text-muted">
-                        Média Ponderada
-                    </small>
+        <small class="text-muted">
+            Média Ponderada
+        </small>
 
-                    <h3 class="mt-2 mb-0">
-                        —
-                    </h3>
+        <h3 class="mt-2 mb-0">
 
-                </div>
+            {% if avarage != None %}
 
-            </div>
+                {% if avarage >= 10 %}
+
+                    <span class="text-success">
+                        {{ avarage|floatformat:2 }}
+                    </span>
+
+                {% elif avarage >= 5 %}
+
+                    <span class="text-warning">
+                        {{ avarage|floatformat:2 }}
+                    </span>
+
+                {% else %}
+
+                    <span class="text-danger">
+                        {{ avarage|floatformat:2 }}
+                    </span>
+
+                {% endif %}
+
+            {% else %}
+
+                —
+
+            {% endif %}
+
+        </h3>
+
+    </div>
+
+</div>
 
         </div>
 
@@ -369,16 +397,54 @@
             <div class="card shadow-sm">
 
                 <div class="card-body">
+                    {% if situation %}
 
                     <small class="text-muted">
                         Situação
                     </small>
 
                     <h3 class="mt-2 mb-0">
-                        —
-                    </h3>
 
-                </div>
+                    {% if situation == 'APROVADO' %}
+
+                        <span class="text-success">
+                            APROVADO
+                        </span>
+
+                    {% elif situation == 'RECURSO' %}
+
+                        <span class="text-warning">
+                            RECURSO
+                        </span>
+
+                    {% elif situation == 'REPROVADO' %}
+
+                        <span class="text-danger">
+                            REPROVADO
+                        </span>
+
+                    {% elif situation == 'PENDENTE' %}
+
+                        <span class="text-warning">
+                            PENDENTE
+                        </span>
+
+                    {% elif situation == 'SEM_NOTAS' %}
+
+                        <span class="text-muted">
+                            SEM NOTAS
+                        </span>
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+             </h3>
+
+          {% endif %}
+            </div>
 
             </div>
 

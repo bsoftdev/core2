@@ -20,7 +20,7 @@ class Evaluation(models.Model):
     group = models.ForeignKey(Group, on_delete=models.PROTECT, related_name='evaluations', verbose_name='Turma')          # Corrigido: related_name
     name = models.CharField(max_length=100, verbose_name='Nome da Avaliação')  # Corrigido: 'Avalição'
     type = models.CharField(max_length=20, choices=TYPES, verbose_name='Tipo de Avaliação')
-    gradeWeight = models.DecimalField(max_digits=5, decimal_places=2, default=1.00, verbose_name='Peso da Nota')
+    gradeWeight = models.DecimalField(max_digits=5, validators=[MinValueValidator(0), MaxValueValidator(100)], decimal_places=2, default=0.00, verbose_name='Peso da Nota (%)')
     date = models.DateField(null=True, blank=True, verbose_name='Data da realização')
     is_active = models.BooleanField(default=True, verbose_name='Ativo')
 

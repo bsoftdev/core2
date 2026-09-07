@@ -28,89 +28,73 @@ class Enrollment(models.Model):
                 name='unique_student_group'
             )
         ]
-
-    # CALCULATING THE AVERAGE MARK => MEDIA
-          # CALCULATING THE AVERAGE MARK => MEDIA
     def calculate_avarage(self, subject):
         from grades.models import Evaluation, Grade
 
-        # 1. Buscar todas as avaliações que DEVERIAM ter nota nesta disciplina e turma
-        avaluations = Evaluation.objects.filter(
+        evaluations = Evaluation.objects.filter(
             subject=subject,
             group=self.group,
             is_active=True,
             type__in=['TESTE', 'TRABALHO', 'PROVA']
         )
 
-        total_avaliacoes = avaluations.count()
+        total_evaluations = evaluations.count()
 
-        # Se não há nenhuma avaliação criada no sistema, não há média
-        if total_avaliacoes == 0:
+        if total_evaluations == 0:
             return None
 
-        # 2. Buscar apenas as notas que o aluno REALMENTE tem para essas avaliações
+        # Verificar se os pesos totalizam 100%
+        total_weight = sum(
+            (evaluation.gradeWeight for evaluation in evaluations),
+            Decimal('0')
+        )
+
+        if total_weight != Decimal('100'):
+            return None
+
         grades = Grade.objects.filter(
             enrollment=self,
-            avaluation__in=avaluations,
-            value__isnull=False # Garante que a nota não está vazia/nula
+            avaluation__in=evaluations,
+            value__isnull=False
         ).select_related('avaluation')
 
-        total_notas_lancadas = grades.count()
-
-        # SEGURANÇA MÁXIMA: Se o número de notas for menor que o número de avaliações,
-        # significa que há notas em falta. O sistema para imediatamente aqui.
-        if total_notas_lancadas < total_avaliacoes:
+        # Se faltar alguma nota, a média fica pendente
+        if grades.count() < total_evaluations:
             return None
 
-        # 3. Se passou na validação (tem todas as notas), faz o cálculo ponderado
-        total_sum = Decimal('0')
-        sum_weight = Decimal('0')
+        total = Decimal('0')
 
         for grade in grades:
-            # Aceder ao peso diretamente através da nota relacionada
-            weight = Decimal(str(grade.avaluation.gradeWeight))
-            total_sum += Decimal(str(grade.value)) * weight
-            sum_weight += weight
+            value = grade.value
+            weight = grade.avaluation.gradeWeight
 
-        if sum_weight == 0:
-            return None
+            total += value * (weight / Decimal('100'))
 
-        return round(total_sum / sum_weight, 2)
+        return total.quantize(Decimal('0.01'))
 
-    # METHOD TO SEE IF SOMEONE IS APPROVED OR NOT
+
     def situation(self, subject):
-        avarage = self.calculate_avarage(subject)
+        average = self.calculate_avarage(subject)
 
-        # Se a média retornou None, significa que faltam notas ou não há avaliações
-        if avarage is None:
+        if average is None:
             from grades.models import Evaluation
 
-            existe_avaluation = Evaluation.objects.filter(
+            evaluations_exist = Evaluation.objects.filter(
                 subject=subject,
                 group=self.group,
                 is_active=True,
-                type__in=[
-                    'TESTE',
-                    'TRABALHO',
-                    'PROVA',
-                ]
+                type__in=['TESTE', 'TRABALHO', 'PROVA']
             ).exists()
 
-            if existe_avaluation:
-                # Se existem avaliações criadas, mas o aluno não tem todas as notas
+            if evaluations_exist:
                 return 'PENDENTE'
-            
-            # Se nem sequer existem avaliações criadas para a disciplina
-            return 'SEM_NOTAS' 
 
-        # CORREÇÃO DA LÓGICA DE NOTAS (Ordem de exclusão estrita)
-        if avarage >= 9.5:  # Na realidade angolana, 9.5 arredonda para 10 (Aprovado)
+            return 'SEM_NOTAS'
+
+        if average >= Decimal('10'):
             return 'APROVADO'
-        
-        if avarage >= 4.5:  # De 4.5 a 9.4 vai a Exame de Recurso
-            return 'RECURSO'
-        
-        return 'REPROVADO' # Abaixo de 4.5 reprova direto sem direito a recurso
 
-    def __str__(self):
-        return f"{self.student}"
+        if average >= Decimal('5'):
+            return 'RECURSO'
+
+        return 'REPROVADO'
