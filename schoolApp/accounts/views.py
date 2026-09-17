@@ -1,325 +1,297 @@
+from decimal import Decimal, InvalidOperation
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages #mensagens de alerta
-from django.shortcuts import render, redirect, get_object_or_404 #pegar objecto ou nao encontre
-from django.http import HttpResponseForbidden
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .utils import teacher_required, student_required
 
-from academics.models import Group,TeacherAssignment
+from academics.models import TeacherAssignment, Subject
 from enrollments.models import Enrollment
-from grades.models import Evaluation, Grade
+from grades.models import AcademicEvaluation, Grade
 from .models import Student, Teacher
 
 
 # LOGIN
 def login_view(request):
 
-
     if request.user.is_authenticated:
         return redirect('dashboard')
 
     if request.method == 'POST':
-
         username = request.POST.get('username')
         password = request.POST.get('password')
 
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-
             login(request, user)
-
             return redirect('dashboard')
 
-        messages.error(
-            request,
-            'Usuário ou senha incorretos.'
-        )
+        messages.error(request, 'Usuário ou senha incorretos.')
 
-    return render(request,'accounts/login.html')
+    return render(request, 'accounts/login.html')
 
 
 # LOGOUT
 @login_required
 def logout_view(request):
-
     logout(request)
- 
     return redirect('login')
 
 
-# REDIRECTING TO THE RIGHT DASHBOARD
+# REDIRECIONAR PARA A DASHBOARD CERTA
 @login_required
 def dashboard(request):
-
     user = request.user
 
-    # ADMIN
     if user.is_superuser:
-
         return redirect('/admin/')
 
-
-    # PROFESSOR
     if user.groups.filter(name='Professores').exists():
+        return redirect('teacher_dashboard')
 
-        return redirect(
-            'teacher_dashboard'
-        )
-
-    # ESTUDANTE
     if user.groups.filter(name='Estudantes').exists():
+        return redirect('student_dashboard')
 
-        return redirect(
-            'student_dashboard'
-        )
-
-
-    # Usuário sem perfil
     logout(request)
-
-    messages.error(request, 'Este usuário não possui um perfil válido.Contactar o Adminastrador do Sistema')
-
+    messages.error(
+        request,
+        'Este usuário não possui um perfil válido. Contacte o administrador do sistema.'
+    )
     return redirect('login')
 
 
-# DASHBOARD OF TEACHER
+# DASHBOARD DO PROFESSOR
 @teacher_required
 def teacher_dashboard(request):
 
-    teacher = request.user.teachers #pegando o prof logado
-    assignments = teacher.teacherassignments.select_related(
-        'subject',
-        'group'
-    )
+    teacher = request.user.teacher_profile
+    assignments = teacher.teacherassignments.select_related('subject', 'group')
 
-    return render(request,'teacher/dashboard.html',{'teacher': teacher, 'assignments':assignments})
+    return render(request, 'teacher/dashboard.html', {'teacher': teacher, 'assignments': assignments})
 
 
-# DASHBOARD OF STUDENT
+# DASHBOARD DO ALUNO
 @student_required
 def student_dashboard(request):
+    student = request.user.student_profile
 
-    student = request.user.students
+    enrollments = Enrollment.objects.filter(student=student).select_related('group', 'group__course')
 
-    return render( request, 'student/dashboard.html', {'student': student})
-
-
-#VIEW PARA PROFESSOR PODER VISUALIZAR APENAS ALUNOS PERTECENTES AS SUAS TURMAS
-@teacher_required
-def teacher_students(request, assignment_id):
-
-    teacher = request.user.teachers
-
-    # Buscar a atribuição específica do professor
-    assignment = get_object_or_404(
-        TeacherAssignment.objects.select_related(
-            'group',
-            'subject'
-        ),
-        id=assignment_id,
-        teacher=teacher
-    )
-
-    # Buscar alunos matriculados na turma dessa atribuição
-    enrollments = Enrollment.objects.filter(
-        group=assignment.group
-    ).select_related(
-        'student',
-        'student__user'
-    )
-
-    return render(
-        request,
-        'teacher/students.html',
-        {
-            'teacher': teacher,
-            'assignment': assignment,
-            'enrollments': enrollments,
-        }
-    )
+    return render(request, 'student/dashboard.html', {'student': student, 'enrollments': enrollments})
 
 
-#view para tela de lancar nota de aluno
-@teacher_required
-def teacher_student_grades(request, assignment_id, student_id):
+# NOTAS DO ALUNO — POR DISCIPLINA E TRIMESTRE
+@student_required
+def student_grades(request, enrollment_id, trimester):
+    student = request.user.student_profile
 
-    teacher = request.user.teachers
-
-    # Buscar a atribuição EXATA
-    assignment = get_object_or_404(
-        TeacherAssignment.objects.select_related(
-            'group',
-            'subject'
-        ),
-        id=assignment_id,
-        teacher=teacher
-    )
-
-    # Verificar se o aluno pertence à turma
     enrollment = get_object_or_404(
-        Enrollment,
-        student_id=student_id,
-        group=assignment.group
+        Enrollment.objects.select_related('group', 'group__course', 'student'),
+        id=enrollment_id,
+        student=student,
     )
-    
-    avarage = enrollment.calculate_avarage(assignment.subject)
-    situation = enrollment.situation(assignment.subject)
-    
 
-    # Buscar somente avaliações da disciplina
-    # e da turma dessa atribuição
-    evaluations = Evaluation.objects.filter(
-        group=assignment.group,
-        subject=assignment.subject,
-        is_active=True
-    ).order_by('date')
+    # Disciplinas que têm avaliações académicas para esta turma/trimestre
+    subjects = Subject.objects.filter(
+        academic_evaluations__group=enrollment.group,
+        academic_evaluations__trimester=trimester,
+        academic_evaluations__is_active=True,
+    ).distinct()
 
-    # Buscar notas do aluno somente dessas avaliações
-    grades = Grade.objects.filter(
-        enrollment=enrollment,
-        avaluation__in=evaluations
-        
-    ).select_related(
-        'avaluation'
-    )
-    
-    # Organizar notas por avaliação
-    grades_by_evaluation = {
-        grade.avaluation_id: grade
-        for grade in grades
-    }
-    evaluation_data = []
+    subject_data = []
 
-    for evaluation in evaluations:
+    for subject in subjects:
+        academic_evaluations = AcademicEvaluation.objects.filter(
+            subject=subject,
+            group=enrollment.group,
+            trimester=trimester,
+            is_active=True,
+        ).select_related('evaluation').order_by('evaluation__type')
 
-        grade = grades_by_evaluation.get(evaluation.id)
+        grades = Grade.objects.filter(
+            enrollment=enrollment,
+            academic_evaluation__in=academic_evaluations,
+        ).select_related('academic_evaluation')
 
-        evaluation_data.append({
-            'evaluation': evaluation,
-            'grade': grade,
+        grades_by_evaluation = {g.academic_evaluation_id: g for g in grades}
+
+        evaluation_data = [
+            {'evaluation': ae, 'grade': grades_by_evaluation.get(ae.id)}
+            for ae in academic_evaluations
+        ]
+
+        average = enrollment.calculate_average(subject, trimester)
+        situation = enrollment.situation(subject, trimester)
+
+        subject_data.append({
+            'subject': subject,
+            'evaluation_data': evaluation_data,
+            'average': average,
+            'situation': situation,
+        })
+
+    return render(request, 'student/grades.html', {
+        'student': student,
+        'enrollment': enrollment,
+        'trimester': trimester,
+        'subject_data': subject_data,
     })
 
-    return render(
-        request,
-        'teacher/student_grades.html',
-        {
-            'teacher': teacher,
-            'assignment': assignment,
-            'enrollment': enrollment,
-            'evaluations': evaluations,
-            'evaluation_data': evaluation_data,
-            'avarage': avarage,
-            'situation': situation,
-        }
+
+# ALUNOS DE UMA TURMA/DISCIPLINA ATRIBUÍDA AO PROFESSOR
+@teacher_required
+def teacher_students(request, assignment_id):
+    teacher = request.user.teacher_profile
+
+    assignment = get_object_or_404(
+        TeacherAssignment.objects.select_related('group', 'subject'),
+        id=assignment_id,
+        teacher=teacher,
     )
 
-#view para lançar notas
+    enrollments = Enrollment.objects.filter(group=assignment.group).select_related('student', 'student__user')
+
+    return render(request, 'teacher/students.html', {
+        'teacher': teacher,
+        'assignment': assignment,
+        'enrollments': enrollments,
+    })
+
+
+# NOTAS DE UM ALUNO ESPECÍFICO (VISÃO DO PROFESSOR) — POR TRIMESTRE
+@teacher_required
+def teacher_student_grades(request, assignment_id, student_id, trimester):
+    teacher = request.user.teacher_profile
+
+    assignment = get_object_or_404(
+        TeacherAssignment.objects.select_related('group', 'subject'),
+        id=assignment_id,
+        teacher=teacher,
+    )
+
+    enrollment = get_object_or_404(Enrollment, student_id=student_id, group=assignment.group)
+
+    average = enrollment.calculate_average(assignment.subject, trimester)
+    situation = enrollment.situation(assignment.subject, trimester)
+
+    academic_evaluations = AcademicEvaluation.objects.filter(
+        group=assignment.group,
+        subject=assignment.subject,
+        trimester=trimester,
+        is_active=True,
+    ).select_related('evaluation').order_by('evaluation__type')
+
+    grades = Grade.objects.filter(
+        enrollment=enrollment,
+        academic_evaluation__in=academic_evaluations,
+    ).select_related('academic_evaluation')
+
+    grades_by_evaluation = {g.academic_evaluation_id: g for g in grades}
+
+    evaluation_data = [
+        {'evaluation': ae, 'grade': grades_by_evaluation.get(ae.id)}
+        for ae in academic_evaluations
+    ]
+
+    return render(request, 'teacher/student_grades.html', {
+        'teacher': teacher,
+        'assignment': assignment,
+        'enrollment': enrollment,
+        'trimester': trimester,
+        'evaluation_data': evaluation_data,
+        'average': average,
+        'situation': situation,
+    })
+
+
+# LANÇAR/EDITAR NOTA
 @teacher_required
 def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
+    teacher = request.user.teacher_profile
 
-    teacher = request.user.teachers
-
-    #buscar atribuição exata do professor
+    # SEGURANÇA: o professor só pode lançar notas na sua própria
+    # atribuição — isto já estava bem feito no teu código original.
     assignment = get_object_or_404(
-        TeacherAssignment.objects.select_related('group','subject'),
+        TeacherAssignment.objects.select_related('group', 'subject'),
         id=assignment_id,
-        teacher = teacher
-    )
-    #verificar de o aluno pertence a turma 
-    enrollment = get_object_or_404(
-        Enrollment,
-        student_id=student_id,
-        group=assignment.group
+        teacher=teacher,
     )
 
-    #buscar avaliacão exata
-    evaluation = get_object_or_404(
-        Evaluation,
-        id = evaluation_id,
-        group = assignment.group,
-        subject = assignment.subject,
-        is_active = True
+    enrollment = get_object_or_404(Enrollment, student_id=student_id, group=assignment.group)
+
+    academic_evaluation = get_object_or_404(
+        AcademicEvaluation,
+        id=evaluation_id,
+        group=assignment.group,
+        subject=assignment.subject,
+        is_active=True,
     )
 
-    #verificar se o estudante já tem  uma nota para essa avaliação
     existing_grade = Grade.objects.filter(
-        enrollment = enrollment,
-        avaluation = evaluation
+        enrollment=enrollment,
+        academic_evaluation=academic_evaluation,
     ).first()
 
     if request.method == 'POST':
         value = request.POST.get('value')
-        observation = request.POST.get('observation')
+        observation = request.POST.get('observation', '')
 
-        #verificar se foi informado uma nota no formulario
-        if value == '' or value is None:
-
-            messages.error(request,'Informe a nota do aluno')
-            
+        def _redirect_back():
+            # CORREÇÃO: o parâmetro estava com typo ('assignmnet_id'),
+            # o que causava NoReverseMatch sempre que caías aqui.
             return redirect(
-                    'teacher_add_grade',
-                    assignmnet_id = assignment.id,
-                    student_id = enrollment.student.id,
-                    evaluation_id = evaluation.id
+                'teacher_add_grade',
+                assignment_id=assignment.id,
+                student_id=enrollment.student.id,
+                evaluation_id=academic_evaluation.id,
             )
+
+        if not value:
+            messages.error(request, 'Informe a nota do aluno.')
+            return _redirect_back()
+
+        # CORREÇÃO: usa Decimal (como o model), em vez de float — evita
+        # imprecisões de ponto flutuante numa nota académica.
         try:
-            value = float(value)
+            value = Decimal(value)
+        except InvalidOperation:
+            messages.error(request, 'Informe uma nota válida.')
+            return _redirect_back()
 
-        except ValueError:
-            messages.error(request,'Informe uma nota válida')
-
-            return redirect(
-                    'teacher_add_grade',
-                    assignmnet_id = assignment.id,
-                    student_id = enrollment.student.id,
-                    evaluation_id = evaluation.id
-            )
-
-        #validadar intervalo da nota [0,20]
         if value < 0 or value > 20:
+            messages.error(request, 'A nota deve estar entre 0 e 20.')
+            return _redirect_back()
 
-            messages.error(request,'A nota deve estar entre 0 e 20')
-
-            return redirect(
-                    'teacher_add_grade',
-                    assignmnet_id = assignment.id,
-                    student_id = enrollment.student.id,
-                    evaluation_id = evaluation.id
-            )
-
-        #CRIAR OU ATUALIZAR A NOTA
         if existing_grade:
             existing_grade.value = value
             existing_grade.observation = observation
+            existing_grade.launched_by = teacher
             existing_grade.save()
-
             messages.success(request, 'Nota atualizada com sucesso!')
         else:
             Grade.objects.create(
-                enrollment = enrollment,
-                avaluation = evaluation,
-                value = value,
-                observation = observation
+                enrollment=enrollment,
+                academic_evaluation=academic_evaluation,
+                value=value,
+                observation=observation,
+                launched_by=teacher,
             )
-
             messages.success(request, 'Nota lançada com sucesso!')
 
         return redirect(
             'teacher_student_grades',
-            assignment_id = assignment.id,
-            student_id = enrollment.student.id
+            assignment_id=assignment.id,
+            student_id=enrollment.student.id,
+            trimester=academic_evaluation.trimester,
         )
-    return render(
-        request,
-        'teacher/add_grade.html',{
-            'teacher':teacher,
-            'assignment':assignment,
-            'enrollment':enrollment,
-            'evaluation':evaluation,
-            'existing_grade':existing_grade,
-        }
-    )
-    
 
+    return render(request, 'teacher/add_grade.html', {
+        'teacher': teacher,
+        'assignment': assignment,
+        'enrollment': enrollment,
+        'evaluation': academic_evaluation,
+        'existing_grade': existing_grade,
+    })

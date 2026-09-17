@@ -1,109 +1,97 @@
-{% extends "base.html" %}
-{% block title %}Area do Estuante{% endblock%}
+{% extends 'base.html' %}
+
+{% block title %}Área do Estudante{% endblock %}
 
 {% block content %}
 
-<div class="container py-5">
-
-    <h1>
-        Olá, {{ student.user.get_full_name }} 
-    </h1>
-
-    <p class="text-muted">
-        Área do Aluno
-    </p>
-
-
-    <div class="row mt-4">
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h5>
-                        Meu Perfil
-                    </h5>
-
-                    <p>
-                        Matrícula:
-                        {{ student.id }}
-                    </p>
-
-                    <a
-                        href="#"
-                        class="btn btn-primary"
-                    >
-                        Ver Perfil
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h5>
-                        Minhas Notas
-                    </h5>
-
-                    <p>
-                        Consulte suas notas
-                        acadêmicas.
-                    </p>
-
-                    <a
-                        href="#"
-                        class="btn btn-success"
-                    >
-                        Ver Notas
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h5>
-                        Minha Pauta
-                    </h5>
-
-                    <p>
-                        Consulte seus resultados
-                        acadêmicos.
-                    </p>
-
-                    <a
-                        href="#"
-                        class="btn btn-secondary"
-                    >
-                        Ver Pauta
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
+<!-- Cabeçalho / Saudação -->
+<div class="mb-4 p-3 bg-light rounded-4 d-flex align-items-center justify-content-between">
+    <div>
+        <h2 class="h4 mb-1 fw-bold text-dark">
+            Olá, {{ student.user.get_full_name }}
+        </h2>
+        <p class="text-muted small mb-0">Bem-vindo à tua área académica.</p>
     </div>
+    <div class="bg-primary text-white rounded-circle d-none d-sm-flex align-items-center justify-content-center shadow-sm"
+         style="width: 48px; height: 48px;">
+        <span class="fw-bold">{{ student.user.username|slice:":2"|upper }}</span>
+    </div>
+</div>
 
+<!-- Dados do estudante -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+            <i class="bi bi-person-vcard me-1 text-primary"></i> Meus Dados
+        </h6>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <div class="bg-light p-3 rounded-3 d-flex align-items-center">
+                    <i class="bi bi-person-badge text-primary fs-4 me-3"></i>
+                    <div>
+                        <span class="text-muted d-block small text-uppercase fw-semibold">Nome Completo</span>
+                        <span class="text-dark fw-medium">{{ student.user.get_full_name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="bg-light p-3 rounded-3 d-flex align-items-center">
+                    <i class="bi bi-person-fill-gear text-primary fs-4 me-3"></i>
+                    <div>
+                        <span class="text-muted d-block small text-uppercase fw-semibold">Nome de Utilizador</span>
+                        <span class="text-dark fw-medium">{{ student.user.username }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Matrículas -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-3">
+        <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+            <i class="bi bi-journal-bookmark-fill me-1 text-primary"></i> Minhas Matrículas
+        </h6>
+
+        {% if enrollments %}
+            <div class="row g-3">
+                {% for enrollment in enrollments %}
+                    <div class="col-12 col-md-6">
+                        <div class="card h-100 border-start border-primary border-4 rounded-3 shadow-none bg-light">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold text-dark mb-2">{{ enrollment.group.course.name }}</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 rounded-2 small">
+                                        <i class="bi bi-people me-1"></i> Turma: <strong>{{ enrollment.group.designation }}</strong>
+                                    </span>
+                                    <!-- CORREÇÃO: a rota agora precisa também do trimestre.
+                                         Mostramos um seletor com os 3 trimestres. -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Ver notas
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{% url 'student_grades' enrollment.id 1 %}">1º Trimestre</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'student_grades' enrollment.id 2 %}">2º Trimestre</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'student_grades' enrollment.id 3 %}">3º Trimestre</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <div class="text-muted fs-2 mb-2"><i class="bi bi-folder-x"></i></div>
+                <p class="text-muted mb-0">Nenhuma matrícula ativa encontrada.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}

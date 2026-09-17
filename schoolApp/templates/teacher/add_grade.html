@@ -1,195 +1,91 @@
-    {% extends 'base.html' %}
+{% extends 'base.html' %}
 
-{% block title %}
-    Lançar Nota | {{ enrollment.student.user.get_full_name }}
-{% endblock %}
-
+{% block title %}Lançar Nota | {{ enrollment.student.user.get_full_name }}{% endblock %}
 
 {% block content %}
 
-<div class="container py-4">
-
-    <!-- Cabeçalho -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2>
-                {% if existing_grade %}
-                    Editar Nota
-                {% else %}
-                    Lançar Nota
-                {% endif %}
-            </h2>
-
-            <p class="mb-1">
-                <strong>Aluno:</strong>
-                {{ enrollment.student.user.get_full_name }}
-            </p>
-
-            <p class="mb-1">
-                <strong>Turma:</strong>
-                {{ assignment.group }}
-            </p>
-
-            <p class="mb-0">
-                <strong>Disciplina:</strong>
-                {{ assignment.subject }}
-            </p>
-
-        </div>
-
-        <a
-            href="{% url 'teacher_student_grades' assignment.id enrollment.student.id %}"
-            class="btn btn-secondary"
-        >
-            <i class="bi bi-arrow-left"></i>
-            Voltar
-        </a>
-
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-2">
+            {% if existing_grade %}Editar Nota{% else %}Lançar Nota{% endif %}
+        </h2>
+        <p class="mb-1"><strong>Aluno:</strong> {{ enrollment.student.user.get_full_name }}</p>
+        <p class="mb-1"><strong>Turma:</strong> {{ assignment.group }}</p>
+        <p class="mb-0"><strong>Disciplina:</strong> {{ assignment.subject }}</p>
     </div>
 
+    <!-- CORREÇÃO: a rota 'teacher_student_grades' agora exige o
+         trimestre. 'evaluation' aqui é a AcademicEvaluation, que já
+         sabe o seu próprio trimestre. -->
+    <a href="{% url 'teacher_student_grades' assignment.id enrollment.student.id evaluation.trimester %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
 
-    <!-- Formulário -->
+<div class="card border-0 shadow-sm rounded-4">
 
-    <div class="card shadow-sm">
+    <div class="card-header bg-white border-0 pt-3">
+        <h5 class="mb-0">Dados da Avaliação</h5>
+    </div>
 
-        
+    <div class="card-body">
 
-        <div class="card-header">
-
-            <h5 class="mb-0">
-                Dados da Avaliação
-            </h5>
-
+        <div class="mb-4 p-3 bg-light rounded-3">
+            <p class="mb-1"><strong>Avaliação:</strong> {{ evaluation.evaluation.name }}</p>
+            <p class="mb-1"><strong>Tipo:</strong> {{ evaluation.evaluation.get_type_display }}</p>
+            <p class="mb-1"><strong>Peso:</strong> {{ evaluation.evaluation.gradeWeight|floatformat:0 }}%</p>
+            <p class="mb-0"><strong>Trimestre:</strong> {{ evaluation.get_trimester_display }}</p>
+            {% if evaluation.date %}
+                <p class="mb-0"><strong>Data:</strong> {{ evaluation.date|date:"d/m/Y" }}</p>
+            {% endif %}
         </div>
 
+        <form method="POST">
+            {% csrf_token %}
 
-        <div class="card-body">
-
-            <div class="mb-4">
-
-                <p class="mb-1">
-                    <strong>Avaliação:</strong>
-                    {{ evaluation.name }}
-                </p>
-
-                <p class="mb-1">
-                    <strong>Tipo:</strong>
-                    {{ evaluation.get_type_display }}
-                </p>
-
-                <p class="mb-1">
-                    <strong>Peso:</strong>
-                    {{ evaluation.gradeWeight|floatformat:0}}% 
-                </p>
-
-                {% if evaluation.date %}
-
-                    <p class="mb-0">
-                        <strong>Data:</strong>
-                        {{ evaluation.date|date:"d/m/Y" }}
-                    </p>
-
-                {% endif %}
-
+            <div class="mb-3">
+                <label for="value" class="form-label fw-semibold">Nota</label>
+                <input
+                    type="number"
+                    name="value"
+                    id="value"
+                    class="form-control form-control-lg"
+                    min="0"
+                    max="20"
+                    step="0.01"
+                    value="{% if existing_grade %}{{ existing_grade.value }}{% endif %}"
+                    required
+                    autofocus
+                >
+                <div class="form-text">Informe uma nota entre 0 e 20.</div>
             </div>
 
+            <div class="mb-4">
+                <label for="observation" class="form-label fw-semibold">Observação</label>
+                <textarea
+                    name="observation"
+                    id="observation"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Observação opcional..."
+                >{{ existing_grade.observation|default_if_none:'' }}</textarea>
+            </div>
 
-            <form method="POST">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    {% if existing_grade %}
+                        <i class="bi bi-save"></i> Atualizar Nota
+                    {% else %}
+                        <i class="bi bi-check-circle"></i> Lançar Nota
+                    {% endif %}
+                </button>
 
-                {% csrf_token %}
+                <a href="{% url 'teacher_student_grades' assignment.id enrollment.student.id evaluation.trimester %}" class="btn btn-secondary">
+                    Cancelar
+                </a>
+            </div>
 
-
-                <!-- Nota -->
-
-                <div class="mb-3">
-
-                    <label
-                        for="value"
-                        class="form-label"
-                    >
-                        Nota
-                    </label>
-
-                    <input
-                        type="number"
-                        name="value"
-                        id="value"
-                        class="form-control"
-                        min="0"
-                        max="20"
-                        step="0.01"
-                        value="{{ existing_grade.value|default_if_none:'' }}"
-                        required
-                    >
-
-                    <div class="form-text">
-                        Informe uma nota entre 0 e 20.
-                    </div>
-
-                </div>
-
-
-                <!-- Observação -->
-
-                <div class="mb-4">
-
-                    <label
-                        for="observation"
-                        class="form-label"
-                    >
-                        Observação
-                    </label>
-
-                    <textarea
-                        name="observation"
-                        id="observation"
-                        class="form-control"
-                        rows="4"
-                        placeholder="Observação opcional..."
-                    >{{ existing_grade.observation|default_if_none:'' }}</textarea>
-
-                </div>
-
-
-                <!-- Botões -->
-
-                <div class="d-flex gap-2">
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-
-                        {% if existing_grade %}
-
-                            <i class="bi bi-save"></i>
-                            Atualizar Nota
-
-                        {% else %}
-
-                            <i class="bi bi-check-circle"></i>
-                            Lançar Nota
-
-                        {% endif %}
-
-                    </button>
-
-
-                    <a
-                        href="{% url 'teacher_student_grades' assignment.id enrollment.student.id %}"
-                        class="btn btn-secondary"
-                    >
-                        Cancelar
-                    </a>
-
-                </div>
-
-            </form>
-
-        </div>
+        </form>
 
     </div>
 

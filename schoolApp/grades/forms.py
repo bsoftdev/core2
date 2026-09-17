@@ -1,47 +1,39 @@
 from django import forms
-from .models import Grade, Evaluation
+from .models import Grade, AcademicEvaluation
 from enrollments.models import Enrollment
+
 
 class GradeAdminForm(forms.ModelForm):
 
     class Meta:
         model = Grade
-        fields = [
-               'enrollment',
-               'avaluation',
-               'value',
-               'observation',
-        ]
+         'avaluation' -> 'academic_evaluation' (nome do campo mudou)
+        fields = ['enrollment', 'academic_evaluation', 'value', 'observation']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['avaluation'].queryset = Evaluation.objects.none()
+        #  o queryset filtrado é de AcademicEvaluation, não
+        # Evaluation (Evaluation não tem 'group').
+        self.fields['academic_evaluation'].queryset = AcademicEvaluation.objects.none()
 
         enrollment = None
-        
-        # Se a instância já existe no banco de dados
+
         if self.instance.pk:
             enrollment = self.instance.enrollment
-            
-        #  Se o formulário foi submetido (POST/GET)
         elif self.data.get('enrollment'):
-            
             try:
                 enrollment = Enrollment.objects.get(pk=self.data.get('enrollment'))
             except (Enrollment.DoesNotExist, ValueError, TypeError):
                 pass
-                
-        #  Se o formulário recebeu dados iniciais (Ex: URL query params)
         elif self.initial.get('enrollment'):
             try:
                 enrollment = Enrollment.objects.get(pk=self.initial.get('enrollment'))
             except (Enrollment.DoesNotExist, ValueError, TypeError):
                 pass
 
-        # Aplica o filtro se encontrou a matrícula válida
         if enrollment:
-            self.fields['avaluation'].queryset = Evaluation.objects.filter(
+            self.fields['academic_evaluation'].queryset = AcademicEvaluation.objects.filter(
                 group=enrollment.group,
-                is_active=True
-            )
+                is_active=True,
+            ).select_related('evaluation', 'subject')

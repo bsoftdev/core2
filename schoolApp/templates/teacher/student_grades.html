@@ -1,456 +1,166 @@
 {% extends 'base.html' %}
 
-{% block title %}
-    Notas | {{ enrollment.student.user.get_full_name }}
-{% endblock %}
+{% block title %}Notas | {{ enrollment.student.user.get_full_name }}{% endblock %}
 
 {% block content %}
 
- <div class="d-flex justify-content-between">
-            <h2>Notas de Aluno</h2>
-            
-            <a href="{% url 'teacher_students' assignment.id %}" class="btn btn-secondary ">
-            Voltar
-           </a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 fw-bold mb-0">Notas do Aluno</h2>
+    <a href="{% url 'teacher_students' assignment.id %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
 </div>
-     <hr>
+<hr>
 
+<div class="row mb-4">
+    <div class="col-md-6 col-sm-12">
+        <p class="text-muted mb-1">Aluno: <strong class="text-dark">{{ enrollment.student.user.get_full_name }}</strong></p>
+        <p class="text-muted mb-1">Disciplina: <strong class="text-dark">{{ assignment.subject.name }}</strong></p>
+        <p class="text-muted mb-1">Turma: <strong class="text-dark">{{ assignment.group.designation }}</strong></p>
+        <p class="text-muted mb-0">Ano Letivo: <strong class="text-dark">{{ assignment.group.academic_year }}</strong></p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="text-muted mb-1">Curso: <strong class="text-dark">{{ assignment.group.course.name }}</strong></p>
+        <!-- CORREÇÃO: 'shit' -> 'shift' -->
+        <p class="text-muted mb-1">Turno: <strong class="text-dark">{{ assignment.group.get_shift_display }}</strong></p>
+        <p class="text-muted mb-0">Professor: <strong class="text-dark">{{ teacher.user.get_full_name }}</strong></p>
+    </div>
+</div>
 
-     <div class="row d-flex justify-content-between mb-4">
-        <div class="col-md-6 col-sm-12">
-            <p class="text-muted mb-0">
-                Aluno:
-                <strong>  {{ enrollment.student.user.get_full_name }}</strong>
-            </p>
-             <p class="text-muted mb-0">
-                Disciplina:
-                <strong>{{ assignment.subject.name }}</strong>
-            </p>
+<!-- SELETOR DE TRIMESTRE -->
+<ul class="nav nav-pills mb-4">
+    {% for t in "123" %}
+        <li class="nav-item">
+            <a class="nav-link {% if trimester|stringformat:'s' == t %}active{% endif %}"
+               href="{% url 'teacher_student_grades' assignment.id enrollment.student.id t %}">
+                {{ t }}º Trimestre
+            </a>
+        </li>
+    {% endfor %}
+</ul>
 
-            <p class="text-muted mb-0">
-                Turma:
-                <strong>{{ assignment.group.designation}}</strong>
-            </p>
+<!--
+    CORREÇÃO: as mensagens já são renderizadas automaticamente pelo
+    base.html (com {{ message.tags }}, correto). O bloco antigo aqui
+    tinha 'massage' (typo) em vez de 'message' no if, por isso as
+    mensagens de sucesso nunca apareciam. Removido — está duplicado.
+-->
 
-            <p class="text-muted mb-0">
-                Ano Letivo:
-                <strong>{{ assignment.group.academic_year}}</strong>
-            </p>
-        </div>
-        <div class="col-md-6 col-sm-12">
-
-            <p class="text-muted mb-0">
-                Curso:
-                <strong>{{ assignment.group.course.name }}</strong>
-            </p>
-
-            <p class="text-muted mb-0 ">
-                Periodo:
-                <strong>{{ assignment.group.shit }}</strong>
-            </p>
-            <p class="text-muted ">
-                Professor:
-                <strong>{{ teacher.user.get_full_name }}</strong>
-            </p>
-        </div>
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Avaliações — {{ trimester }}º Trimestre</h5>
+        <span class="badge bg-primary">{{ evaluation_data|length }} avaliações</span>
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- INFORMAÇÕES DO ALUNO -->
-    <!-- ===================================================== -->
-
-    <div class="card shadow-sm mb-4">
-
-       
-
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-4">
-
-                    <small class="text-muted">
-                        Aluno
-                    </small>
-
-                    <h5 class="mb-0">
-                        {{ enrollment.student.user.get_full_name }}
-                    </h5>
-
-                </div>
-
-
-                <div class="col-md-4">
-
-                    <small class="text-muted">
-                        Turma
-                    </small>
-
-                    <h5 class="mb-0">
-                        {{ assignment.group }}
-                    </h5>
-
-                </div>
-
-
-                <div class="col-md-4">
-
-                    <small class="text-muted">
-                        Disciplina
-                    </small>
-
-                    <h5 class="mb-0">
-                        {{ assignment.subject }}
-                    </h5>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-     {% comment "" %} MESSAGE WHEN ADING OR UPDATING GRADE {% endcomment %}
-        {%  if messages %}
-            {% for massage in messages %}
-                {% if message.level == DEFAULT_MESSAGE_LEVEL.SUCCESS %}
-                <div class='alert alert-success alert-dismissible fade show' role='alert'>
-                     {{massage}}
-                </div>
-                {% endif %}
-            {% endfor %}
-
-        {% endif %}
-
-    <!-- ===================================================== -->
-    <!-- AVALIAÇÕES -->
-    <!-- ===================================================== -->
-
-    <div class="card shadow-sm">
-
-        <div class="card-header d-flex justify-content-between align-items-center">
-
-            <h5 class="mb-0">
-                Avaliações
-            </h5>
-
-            <span class="badge bg-primary">
-                {{ evaluation_data|length }} avaliações
-            </span>
-
-        </div>
-
-
-        <div class="card-body p-0">
-
-            {% if evaluation_data %}
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover table-striped align-middle mb-0">
-
-                        <thead class="table-light">
-
+    <div class="card-body p-0">
+        {% if evaluation_data %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Avaliação</th>
+                            <th>Tipo</th>
+                            <th>Peso</th>
+                            <th>Data</th>
+                            <th>Nota</th>
+                            <th class="text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in evaluation_data %}
                             <tr>
-
-                                <th>#</th>
-
-                                <th>Avaliação</th>
-
-                                <th>Tipo</th>
-
-                                <th>Peso </th>
-
-                                <th>Data</th>
-
-                                <th>Nota</th>
-
-                                <th class="text-center">
-                                    Ação
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {% for item in evaluation_data %}
-
-                                <tr>
-
-                                    <!-- Número -->
-                                    <td>
-                                        {{ forloop.counter }}
-                                    </td>
-
-
-                                    <!-- Avaliação -->
-                                    <td>
-
-                                        <strong>
-                                            {{ item.evaluation.name }}
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ item.evaluation.evaluation.name }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ item.evaluation.evaluation.get_type_display }}</span></td>
+                                <td>{{ item.evaluation.evaluation.gradeWeight|floatformat:0 }}%</td>
+                                <td>
+                                    {% if item.evaluation.date %}
+                                        {{ item.evaluation.date|date:"d/m/Y" }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.grade and item.grade.value != None %}
+                                        <strong class="{% if item.grade.value >= 10 %}text-primary{% else %}text-danger{% endif %}">
+                                            {{ item.grade.value|floatformat:2 }}
                                         </strong>
-
-                                    </td>
-
-
-                                    <!-- Tipo -->
-                                    <td>
-
-                                        <span class="badge bg-secondary">
-
-                                            {{ item.evaluation.get_type_display }}
-
-                                        </span>
-
-                                    </td>
-
-
-                                    <!-- Peso -->
-                                    <td>
-
-                                        {{ item.evaluation.gradeWeight|floatformat:0 }}%
-
-                                    </td>
-
-
-                                    <!-- Data -->
-                                    <td>
-
-                                        {% if item.evaluation.date %}
-
-                                            {{ item.evaluation.date|date:"d/m/Y" }}
-
-                                        {% else %}
-
-                                            <span class="text-muted">
-                                                —
-                                            </span>
-
-                                        {% endif %}
-
-                                    </td>
-
-
-                                    <!-- Nota -->
-                                    <td>
-
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'teacher_add_grade' assignment.id enrollment.student.id item.evaluation.id %}"
+                                       class="btn btn-sm {% if item.grade %}btn-warning{% else %}btn-primary{% endif %}">
                                         {% if item.grade %}
-
-                                            {% if item.grade.value != None %}
-
-                                                {% if item.grade.value < 10 %}
-                                                    <strong class="text-danger">
-                                                        {{ item.grade.value }}
-                                                    </strong>
-
-                                                    {% elif item.grade.value >= 10 %}
-                                                    <strong class="text-primary">
-                                                        {{ item.grade.value }}
-                                                    </strong>
-
-                                             {% endif %}
-                                                
-
-                                            {% else %}
-
-                                                <span class="text-muted">
-                                                    —
-                                                </span>
-
-                                            {% endif %}
-
+                                            <i class="bi bi-pencil"></i> Editar
                                         {% else %}
-
-                                            <span class="text-muted">
-                                                —
-                                            </span>
-
+                                            <i class="bi bi-plus-circle"></i> Lançar
                                         {% endif %}
-
-                                    </td>
-
-
-                                    <!-- Ação -->
-                                    <td class="text-center">
-
-                                        {% if item.grade %}
-
-                                            <a
-                                                href="{% url 'teacher_add_grade' assignment.id enrollment.student.id  item.evaluation.id%}"
-                                                class="btn btn-sm btn-warning"
-                                            >
-                                                <i class="bi bi-pencil"></i>
-                                                Editar
-                                            </a>
-
-                                        {% else %}
-
-                                            <a
-                                                href="{% url 'teacher_add_grade' assignment.id enrollment.student.id  item.evaluation.id%}"
-                                                class="btn btn-sm btn-primary"
-                                            >
-                                                <i class="bi bi-plus-circle"></i>
-                                                Lançar nota
-                                            </a>
-
-                                        {% endif %}
-
-                                    </td>
-
-                                </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Não existem avaliações cadastradas para esta disciplina/turma neste trimestre.
                 </div>
-
-            {% else %}
-
-                <div class="p-4">
-
-                    <div class="alert alert-info mb-0">
-
-                        <i class="bi bi-info-circle"></i>
-
-                        Não existem avaliações cadastradas
-                        para esta disciplina e turma.
-
-                    </div>
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
+            </div>
+        {% endif %}
     </div>
-
-
-    <!-- ===================================================== -->
-    <!-- RESUMO ACADÉMICO -->
-    <!-- ===================================================== -->
-
-    <div class="row mt-4">
-
-        <!-- Média -->
-        <div class="col-md-6 mb-3">
-
-  <div class="card shadow-sm">
-
-    <div class="card-body">
-
-        <small class="text-muted">
-            Média Ponderada
-        </small>
-
-        <h3 class="mt-2 mb-0">
-
-            {% if avarage != None %}
-
-                {% if avarage >= 10 %}
-
-                    <span class="text-success">
-                        {{ avarage|floatformat:2 }}
-                    </span>
-
-                {% elif avarage >= 5 %}
-
-                    <span class="text-warning">
-                        {{ avarage|floatformat:2 }}
-                    </span>
-
-                {% else %}
-
-                    <span class="text-danger">
-                        {{ avarage|floatformat:2 }}
-                    </span>
-
-                {% endif %}
-
-            {% else %}
-
-                —
-
-            {% endif %}
-
-        </h3>
-
-    </div>
-
 </div>
 
-        </div>
-
-
-        <!-- Situação -->
-        <div class="col-md-6 mb-3">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-                    {% if situation %}
-
-                    <small class="text-muted">
-                        Situação
-                    </small>
-
-                    <h3 class="mt-2 mb-0">
-
-                    {% if situation == 'APROVADO' %}
-
-                        <span class="text-success">
-                            APROVADO
-                        </span>
-
-                    {% elif situation == 'RECURSO' %}
-
-                        <span class="text-warning">
-                            RECURSO
-                        </span>
-
-                    {% elif situation == 'REPROVADO' %}
-
-                        <span class="text-danger">
-                            REPROVADO
-                        </span>
-
-                    {% elif situation == 'PENDENTE' %}
-
-                        <span class="text-warning">
-                            PENDENTE
-                        </span>
-
-                    {% elif situation == 'SEM_NOTAS' %}
-
-                        <span class="text-muted">
-                            SEM NOTAS
-                        </span>
-
+<!-- RESUMO ACADÉMICO -->
+<div class="row mt-4">
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <small class="text-muted text-uppercase fw-semibold">Média Ponderada</small>
+                <h3 class="mt-2 mb-0">
+                    {% if average != None %}
+                        {% if average >= 10 %}
+                            <span class="text-success">{{ average|floatformat:2 }}</span>
+                        {% elif average >= 5 %}
+                            <span class="text-warning">{{ average|floatformat:2 }}</span>
+                        {% else %}
+                            <span class="text-danger">{{ average|floatformat:2 }}</span>
+                        {% endif %}
                     {% else %}
-
                         —
-
                     {% endif %}
-
-             </h3>
-
-          {% endif %}
+                </h3>
             </div>
-
-            </div>
-
         </div>
-
     </div>
 
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <small class="text-muted text-uppercase fw-semibold">Situação</small>
+                <h3 class="mt-2 mb-0">
+                    {% if situation == 'APROVADO' %}
+                        <span class="text-success">APROVADO</span>
+                    {% elif situation == 'RECURSO' %}
+                        <span class="text-warning">RECURSO</span>
+                    {% elif situation == 'REPROVADO' %}
+                        <span class="text-danger">REPROVADO</span>
+                    {% elif situation == 'PENDENTE' %}
+                        <span class="text-warning">PENDENTE</span>
+                    {% elif situation == 'SEM_NOTAS' %}
+                        <span class="text-muted">SEM NOTAS</span>
+                    {% else %}
+                        —
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

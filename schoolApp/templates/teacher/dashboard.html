@@ -1,203 +1,140 @@
-{% extends "base.html" %}
-{% block title  %} Area do Professor{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Área do Professor{% endblock %}
 
 {% block content %}
 
-<div class="container py-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1">Olá, {{ teacher.user.get_full_name }}</h2>
+        <p class="text-muted small mb-0">Painel do Professor</p>
+    </div>
+</div>
 
-    <!-- CABEÇALHO -->
+<!-- CARTÕES DE RESUMO -->
+<div class="row g-3 mb-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2>
-                Olá, {{ teacher.user.get_full_name }} ({{teacher.id}})
-            </h2>
-
-            <p class="text-muted mb-0">
-                Painel do Professor
-            </p>
-
+    <div class="col-6 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center"
+                     style="width: 48px; height: 48px;">
+                    <i class="bi bi-journal-bookmark-fill fs-4"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Disciplinas</div>
+                    <div class="h4 mb-0 fw-bold">{{ total_subjects }}</div>
+                </div>
+            </div>
         </div>
-
     </div>
 
-
-    <!-- CARDS -->
-
-    <div class="row g-4 mb-5">
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">
-                        Disciplinas
-                    </h6>
-
-                    <h2>
-                        {{ assignments|length }}
-                    </h2>
-
+    <div class="col-6 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center"
+                     style="width: 48px; height: 48px;">
+                    <i class="bi bi-people-fill fs-4"></i>
                 </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">
-                        Turmas
-                    </h6>
-
-                    <h2>
-                        {{ assignments|length }}
-                    </h2>
-
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Turmas</div>
+                    <div class="h4 mb-0 fw-bold">{{ total_groups }}</div>
                 </div>
-
             </div>
-
         </div>
-
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm">
-
-                <div class="card-body">
-
-                    <h6 class="text-muted">
-                        Professor
-                    </h6>
-
-                    <h5>
-                        {{ teacher.user.get_full_name }}
-                    </h5>
-
-                </div>
-
-            </div>
-
-        </div>
-
     </div>
 
-
-    <!-- DISCIPLINAS -->
-
-    <div class="card shadow-sm">
-
-        <div class="card-header">
-
-            <h5 class="mb-0">
-                Minhas Disciplinas e Turmas
-            </h5>
-
-        </div>
-
-
-        <div class="card-body">
-
-            {% if assignments %}
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Disciplina
-                                </th>
-
-                                <th>
-                                    Turma
-                                </th>
-
-                                <th>
-                                    Ações
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {% for assignment in assignments %}
-
-                            <tr>
-
-                                <td>
-
-                                    {{ assignment.subject }}
-
-                                </td>
-
-
-                                <td>
-
-                                    {{ assignment.group }}
-
-                                </td>
-
-
-                                <td>
-
-                                    <a
-                                        href="{% url 'teacher_students' assignment.id %}"
-                                        class="btn btn-sm btn-primary"
-                                    >
-                                        Ver alunos
-                                    </a>
-
-                                    <a
-                                        href="#"
-                                        class="btn btn-sm btn-success"
-                                    >
-                                        Lançar notas
-                                    </a>
-
-                                </td>
-
-                            </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center"
+                     style="width: 48px; height: 48px;">
+                    <i class="bi bi-mortarboard-fill fs-4"></i>
                 </div>
-
-            {% else %}
-
-                <div class="alert alert-info">
-
-                    Você ainda não possui
-                    disciplinas ou turmas atribuídas.
-
+                <div>
+                    <div class="text-muted small text-uppercase fw-semibold">Professor</div>
+                    <div class="fw-bold">{{ teacher.user.get_full_name }}</div>
                 </div>
-
-            {% endif %}
-
+            </div>
         </div>
-
     </div>
 
 </div>
 
+<!-- GRÁFICO: ALUNOS POR TURMA -->
+{% if groups_summary %}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Alunos ativos por turma</h6>
+        <canvas id="groupsChart" height="90"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<!-- LISTA DE DISCIPLINAS/TURMAS -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white border-0 pt-3">
+        <h5 class="mb-0">Minhas Disciplinas e Turmas</h5>
+    </div>
+
+    <div class="card-body pt-0">
+        {% if assignments %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Disciplina</th>
+                            <th>Turma</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.subject }}</td>
+                            <td>{{ assignment.group }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'teacher_students' assignment.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-people"></i> Ver alunos
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0">
+                Ainda não possuis disciplinas ou turmas atribuídas.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if groups_summary %}
+{{ groups_summary|json_script:"groups-summary-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    const groupsSummary = JSON.parse(document.getElementById('groups-summary-data').textContent);
+    new Chart(document.getElementById('groupsChart'), {
+        type: 'bar',
+        data: {
+            labels: groupsSummary.map(g => g.group__designation),
+            datasets: [{
+                label: 'Alunos ativos',
+                data: groupsSummary.map(g => g.total),
+                backgroundColor: '#0d6efd',
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}
