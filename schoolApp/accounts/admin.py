@@ -3,6 +3,7 @@ from .models import Student, Teacher
 from enrollments.models import Enrollment
 from .forms import StudentUserFormAdmin, TeacherUserFormAdmin
 from academics.models import TeacherAssignment
+from unfold.admin import ModelAdmin
 
 
 class EnrollmentInline(admin.TabularInline):
@@ -14,7 +15,7 @@ class EnrollmentInline(admin.TabularInline):
 
 
 @admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
+class StudentAdmin(ModelAdmin):
 
     form = StudentUserFormAdmin
 
@@ -48,7 +49,7 @@ class TeacherAssignmentInline(admin.TabularInline):
 
 
 @admin.register(Teacher)
-class TeacherAdmin(admin.ModelAdmin):
+class TeacherAdmin(ModelAdmin):
 
     form = TeacherUserFormAdmin
 

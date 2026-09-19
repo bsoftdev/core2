@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block subnav %}
+<!-- MENU SECUNDÁRIO (Desktop) — a toda a largura, fixo logo abaixo do navbar principal -->
+<div class="bg-white border-bottom shadow-sm sticky-top d-none d-md-block" style="top: 56px; z-index: 1020;">
+    <div class="container">
+        <ul class="nav nav-underline">
+            <li class="nav-item">
+                <a class="nav-link px-3 py-3 fw-semibold {% if request.resolver_match.url_name == 'student_dashboard' %}active{% else %}text-body-secondary{% endif %}"
+                   href="{% url 'student_dashboard' %}">
+                    <i class="bi bi-house-door-fill me-1"></i> Início
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link px-3 py-3 fw-semibold text-body-secondary"
+                   href="{% url 'student_dashboard' %}#turmas">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i> Minhas Turmas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link px-3 py-3 fw-semibold {% if request.resolver_match.url_name == 'student_profile' %}active{% else %}text-body-secondary{% endif %}"
+                   href="{% url 'student_profile' %}">
+                    <i class="bi bi-person-fill me-1"></i> Perfil
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- CONTEÚDO DA PÁGINA -->
+<div class="pb-5 mb-5 mb-md-0">
+    {% block student_content %}{% endblock %}
+</div>
+
+<!-- MENU INFERIOR ESTILO APP (Mobile) -->
+<nav class="d-md-none fixed-bottom bg-white border-top shadow-lg">
+    <div class="row text-center g-0 py-1">
+
+        <div class="col-3">
+            <a href="{% url 'student_dashboard' %}"
+               class="d-flex flex-column align-items-center text-decoration-none py-1 {% if request.resolver_match.url_name == 'student_dashboard' %}text-primary{% else %}text-muted{% endif %}">
+                <i class="bi {% if request.resolver_match.url_name == 'student_dashboard' %}bi-house-door-fill{% else %}bi-house-door{% endif %} fs-5"></i>
+                <span style="font-size: 11px;">Início</span>
+            </a>
+        </div>
+
+        <div class="col-3">
+            <a href="{% url 'student_dashboard' %}#turmas"
+               class="d-flex flex-column align-items-center text-decoration-none py-1 text-muted">
+                <i class="bi bi-journal-bookmark fs-5"></i>
+                <span style="font-size: 11px;">Turmas</span>
+            </a>
+        </div>
+
+        <div class="col-3">
+            <a href="{% url 'student_profile' %}"
+               class="d-flex flex-column align-items-center text-decoration-none py-1 {% if request.resolver_match.url_name == 'student_profile' %}text-primary{% else %}text-muted{% endif %}">
+                <i class="bi {% if request.resolver_match.url_name == 'student_profile' %}bi-person-fill{% else %}bi-person{% endif %} fs-5"></i>
+                <span style="font-size: 11px;">Perfil</span>
+            </a>
+        </div>
+
+        <div class="col-3">
+            <a href="{% url 'logout' %}"
+               class="d-flex flex-column align-items-center text-decoration-none py-1 text-muted">
+                <i class="bi bi-box-arrow-right fs-5"></i>
+                <span style="font-size: 11px;">Sair</span>
+            </a>
+        </div>
+
+    </div>
+</nav>
+
+{% endblock %}

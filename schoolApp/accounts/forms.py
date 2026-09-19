@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import password_validation
+from django.contrib.auth.forms import PasswordChangeForm
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import Student, Teacher
@@ -12,7 +13,7 @@ from .models import Student, Teacher
 class _BaseUserProfileForm(forms.ModelForm):
     """
     Lógica partilhada entre StudentUserFormAdmin e TeacherUserFormAdmin,
-    para não repetir o mesmo save() (com os mesmos bugs) duas vezes.
+    para não repetir o mesmo save() duas vezes.
     Subclasses definem `group_name` ('Estudantes' ou 'Professores').
     """
     username = forms.CharField(max_length=150, label='Nome de usuário')
@@ -26,6 +27,13 @@ class _BaseUserProfileForm(forms.ModelForm):
 
     group_name = None  # definido nas subclasses
 
+    # CAMPOS PARTILHADOS DE PersonalInfoMixin — comuns aos dois forms.
+    # Definidos aqui, na base, para não repetir em Student e Teacher.
+    base_fields_common = [
+        'id_card_number', 'gender', 'birthdate', 'place_of_birth',
+        'province', 'father_name', 'mother_name', 'phone',
+    ]
+
     def clean_username(self):
         username = self.cleaned_data['username']
         existing = User.objects.filter(username=username)
@@ -37,8 +45,6 @@ class _BaseUserProfileForm(forms.ModelForm):
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
-        # Só exige password forte quando é uma nova conta, ou quando o
-        # admin está mesmo a alterar a senha numa edição.
         if password:
             password_validation.validate_password(password)
         elif not self.instance.pk:
@@ -69,9 +75,6 @@ class _BaseUserProfileForm(forms.ModelForm):
                 )
                 profile.user = user
 
-            # sem isto, o dashboard() nunca reconhece
-            # o papel do utilizador (baseia-se nestes grupos), e a conta
-            # fica "sem perfil válido" apesar de ter Student/Teacher.
             group, _ = Group.objects.get_or_create(name=self.group_name)
             user.groups.add(group)
 
@@ -88,7 +91,9 @@ class StudentUserFormAdmin(_BaseUserProfileForm):
         model = Student
         fields = [
             'username', 'email', 'password', 'first_name', 'last_name',
-            'address', 'birthdate', 'phone',
+            'id_card_number', 'gender', 'birthdate', 'place_of_birth',
+            'province', 'father_name', 'mother_name', 'phone',
+            'address',
         ]
 
 
@@ -99,5 +104,83 @@ class TeacherUserFormAdmin(_BaseUserProfileForm):
         model = Teacher
         fields = [
             'username', 'email', 'password', 'first_name', 'last_name',
-            'specialty', 'phone',
+            'id_card_number', 'gender', 'birthdate', 'place_of_birth',
+            'province', 'father_name', 'mother_name', 'phone',
+            'specialty',
         ]
+
+
+# =========================================================
+# FORMS DE AUTOATUALIZAÇÃO DE PERFIL (usados pelo próprio
+# aluno/professor nas suas páginas de Perfil — diferente dos
+# forms do admin acima, que servem para criar/editar contas).
+# =========================================================
+
+class StudentContactForm(forms.ModelForm):
+    """Permite ao próprio aluno atualizar e-mail e telefone."""
+    email = forms.EmailField(
+        required=False, label='E-mail',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Student
+        fields = ['phone']
+        widgets = {
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if self.user is not None:
+            self.fields['email'].initial = self.user.email
+
+    def save(self, commit=True):
+        student = super().save(commit=commit)
+        if self.user is not None:
+            self.user.email = self.cleaned_data.get('email', '')
+            if commit:
+                self.user.save(update_fields=['email'])
+        return student
+
+
+class TeacherContactForm(forms.ModelForm):
+    """Permite ao próprio professor atualizar e-mail e telefone."""
+    email = forms.EmailField(
+        required=False, label='E-mail',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Teacher
+        fields = ['phone']
+        widgets = {
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if self.user is not None:
+            self.fields['email'].initial = self.user.email
+
+    def save(self, commit=True):
+        teacher = super().save(commit=commit)
+        if self.user is not None:
+            self.user.email = self.cleaned_data.get('email', '')
+            if commit:
+                self.user.save(update_fields=['email'])
+        return teacher
+
+
+class BootstrapPasswordChangeForm(PasswordChangeForm):
+    """
+    O PasswordChangeForm nativo do Django não sabe nada de Bootstrap —
+    esta subclasse só acrescenta a classe 'form-control' a cada campo,
+    para não teres de o fazer campo a campo em cada template.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'

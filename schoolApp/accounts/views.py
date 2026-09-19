@@ -1,11 +1,13 @@
 from decimal import Decimal, InvalidOperation
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count
 
 from .utils import teacher_required, student_required
+from .forms import StudentContactForm, TeacherContactForm, BootstrapPasswordChangeForm
 
 from academics.models import TeacherAssignment, Subject
 from enrollments.models import Enrollment
@@ -66,21 +68,111 @@ def dashboard(request):
 # DASHBOARD DO PROFESSOR
 @teacher_required
 def teacher_dashboard(request):
-
+    # CORREÇÃO: related_name mudou de 'teachers' para 'teacher_profile'
     teacher = request.user.teacher_profile
     assignments = teacher.teacherassignments.select_related('subject', 'group')
 
-    return render(request, 'teacher/dashboard.html', {'teacher': teacher, 'assignments': assignments})
+    # CORREÇÃO: no template original, "Disciplinas" e "Turmas" mostravam
+    # o mesmo número (assignments|length) — mas uma atribuição não é o
+    # mesmo que uma disciplina nem que uma turma (um professor pode ter
+    # 3 atribuições em apenas 2 turmas, por exemplo). Contamos os
+    # valores distintos.
+    total_subjects = assignments.values('subject').distinct().count()
+    total_groups = assignments.values('group').distinct().count()
+
+    # Dados para o gráfico: nº de alunos ativos por turma do professor.
+    groups_summary = list(
+        Enrollment.objects.filter(
+            group__in=assignments.values('group'), status='ATIVA'
+        )
+        .values('group__designation')
+        .annotate(total=Count('id'))
+        .order_by('group__designation')
+    )
+
+    return render(request, 'teacher/dashboard.html', {
+        'teacher': teacher,
+        'assignments': assignments,
+        'total_subjects': total_subjects,
+        'total_groups': total_groups,
+        'groups_summary': groups_summary,
+    })
+
+
+# PERFIL DO PROFESSOR
+@teacher_required
+def teacher_profile(request):
+    teacher = request.user.teacher_profile
+    contact_form = TeacherContactForm(instance=teacher, user=request.user)
+    password_form = BootstrapPasswordChangeForm(user=request.user)
+
+    if request.method == 'POST':
+        if 'update_contact' in request.POST:
+            contact_form = TeacherContactForm(request.POST, instance=teacher, user=request.user)
+            if contact_form.is_valid():
+                contact_form.save()
+                messages.success(request, 'Dados de contacto atualizados com sucesso!')
+                return redirect('teacher_profile')
+
+        elif 'change_password' in request.POST:
+            # SEGURANÇA: PasswordChangeForm exige a senha atual antes de
+            # aceitar a nova — evita que alguém com a sessão aberta
+            # (mas sem saber a senha) a troque sem mais nem menos.
+            password_form = BootstrapPasswordChangeForm(user=request.user, data=request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                # Sem isto, o Django invalidava a sessão atual ao mudar
+                # a senha, e o professor era deslogado logo a seguir.
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Senha alterada com sucesso!')
+                return redirect('teacher_profile')
+
+    return render(request, 'teacher/profile.html', {
+        'teacher': teacher,
+        'contact_form': contact_form,
+        'password_form': password_form,
+    })
 
 
 # DASHBOARD DO ALUNO
 @student_required
 def student_dashboard(request):
+    # CORREÇÃO: related_name mudou de 'students' para 'student_profile'
     student = request.user.student_profile
 
     enrollments = Enrollment.objects.filter(student=student).select_related('group', 'group__course')
 
     return render(request, 'student/dashboard.html', {'student': student, 'enrollments': enrollments})
+
+
+# PERFIL DO ALUNO
+@student_required
+def student_profile(request):
+    student = request.user.student_profile
+    contact_form = StudentContactForm(instance=student, user=request.user)
+    password_form = BootstrapPasswordChangeForm(user=request.user)
+
+    if request.method == 'POST':
+        if 'update_contact' in request.POST:
+            contact_form = StudentContactForm(request.POST, instance=student, user=request.user)
+            if contact_form.is_valid():
+                contact_form.save()
+                messages.success(request, 'Dados de contacto atualizados com sucesso!')
+                return redirect('student_profile')
+
+        elif 'change_password' in request.POST:
+            password_form = BootstrapPasswordChangeForm(user=request.user, data=request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Senha alterada com sucesso!')
+                return redirect('student_profile')
+
+    return render(request, 'student/profile.html', {
+        'student': student,
+        'contact_form': contact_form,
+        'password_form': password_form,
+    })
 
 
 # NOTAS DO ALUNO — POR DISCIPLINA E TRIMESTRE
@@ -222,6 +314,8 @@ def teacher_add_grade(request, assignment_id, student_id, evaluation_id):
 
     enrollment = get_object_or_404(Enrollment, student_id=student_id, group=assignment.group)
 
+    # CORREÇÃO: 'Evaluation' -> 'AcademicEvaluation' (Evaluation não tem
+    # 'group'/'subject' — isto rebentava sempre com FieldError).
     academic_evaluation = get_object_or_404(
         AcademicEvaluation,
         id=evaluation_id,

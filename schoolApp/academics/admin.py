@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib import messages
+from unfold.admin import ModelAdmin
 
 from .models import (
     Course,
@@ -17,7 +18,7 @@ from grades.services import generate_evaluations_for_group
 # =========================================================
 
 @admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
+class CourseAdmin(ModelAdmin):
     list_display = ('code', 'name', 'duration', 'is_active')
     search_fields = ('code', 'name')
     list_filter = ('is_active', 'duration')
@@ -31,7 +32,7 @@ class CourseAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(Subject)
-class SubjectAdmin(admin.ModelAdmin):
+class SubjectAdmin(ModelAdmin):
     list_display = ('code', 'name', 'course', 'course_year', 'workload', 'is_active')
     search_fields = ('code', 'name', 'course__name')
     list_filter = ('course', 'course_year', 'is_active')
@@ -46,7 +47,7 @@ class SubjectAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(AcademicYear)
-class AcademicYearAdmin(admin.ModelAdmin):
+class AcademicYearAdmin(ModelAdmin):
     list_display = ('designation', 'start_date', 'end_date', 'is_active')
     search_fields = ('designation',)
     list_filter = ('is_active',)
@@ -59,7 +60,7 @@ class AcademicYearAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(Group)
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(ModelAdmin):
     # CORREÇÃO: 'shit' -> 'shift' em list_display e list_filter.
     list_display = (
         'designation',
@@ -127,7 +128,7 @@ class GroupAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(TeacherAssignment)
-class TeacherAssignmentAdmin(admin.ModelAdmin):
+class TeacherAssignmentAdmin(ModelAdmin):
     list_display = ('teacher', 'subject', 'group', 'date_assignment', 'is_active')
     search_fields = (
         'teacher__user__first_name',

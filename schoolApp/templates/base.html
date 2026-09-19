@@ -16,12 +16,12 @@
 
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark sticky-top">
 
     <div class="container">
 
         <a class="navbar-brand" href="{% url 'dashboard' %}">
-            Sistema Académico
+            BSOFT SCHOOL
         </a>
 
         {% if request.user.is_authenticated %}
@@ -33,6 +33,11 @@
     </div>
 
 </nav>
+
+<!-- CORREÇÃO: bloco novo — permite a um menu secundário (ex: da área
+     do professor/aluno) ficar a toda a largura, colado ao navbar
+     principal, em vez de apertado dentro do .container da página. -->
+{% block subnav %}{% endblock %}
 
 <main>
     <div class="container mt-5">

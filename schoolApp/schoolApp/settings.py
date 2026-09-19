@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +41,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     #'jazzmin',
+    "unfold",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -123,6 +127,11 @@ USE_I18N = True
 
 USE_TZ = True
 
+LANGUAGES = [ 
+    ("pt", "Portuguese"),
+    ("en", "English"),
+]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -138,3 +147,215 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
+
+UNFOLD = {
+    # Identidade do sistema
+    "SITE_TITLE": "SchoolApp | Gestão Académica",
+    "SITE_HEADER": "BSOFT SCHOOL",
+    "SITE_SUBHEADER": "Sistema de Gestão Académica",
+    "SITE_VERSION": "1.0.0",
+    "SITE_URL": "/",
+
+    # Ícone e símbolo do sistema
+    "SITE_SYMBOL": "school",
+
+    # Opções da interface
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "SHOW_BACK_BUTTON": True,
+    "SHOW_UI_WARNINGS": False,
+
+    # Tema
+    "THEME": "light",
+
+    # Estilos personalizados
+    "STYLES": [
+        lambda request: static("css/style.css"),
+    ],
+
+    # Scripts personalizados
+    "SCRIPTS": [
+        lambda request: static("js/script.js"),
+    ],
+
+    # Arredondamento dos elementos
+    "BORDER_RADIUS": "8px",
+
+    # Cores do sistema
+    "COLORS": {
+        "base": {
+            "50": "oklch(98% .003 247)",
+            "100": "oklch(96% .005 247)",
+            "200": "oklch(92% .008 247)",
+            "300": "oklch(86% .012 247)",
+            "400": "oklch(70% .018 247)",
+            "500": "oklch(55% .025 247)",
+            "600": "oklch(43% .03 247)",
+            "700": "oklch(34% .035 247)",
+            "800": "oklch(25% .035 247)",
+            "900": "oklch(18% .03 247)",
+            "950": "oklch(12% .025 247)",
+        },
+
+        "primary": {
+            "50": "oklch(97% .015 245)",
+            "100": "oklch(93% .03 245)",
+            "200": "oklch(87% .06 245)",
+            "300": "oklch(78% .10 245)",
+            "400": "oklch(68% .15 245)",
+            "500": "oklch(58% .19 245)",
+            "600": "oklch(50% .20 245)",
+            "700": "oklch(42% .18 245)",
+            "800": "oklch(34% .15 245)",
+            "900": "oklch(27% .12 245)",
+            "950": "oklch(20% .09 245)",
+        },
+
+        "font": {
+            "subtle-light": "var(--color-base-500)",
+            "subtle-dark": "var(--color-base-400)",
+            "default-light": "var(--color-base-700)",
+            "default-dark": "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark": "var(--color-base-100)",
+        },
+    },
+
+    # Menu lateral
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+
+        "navigation": [
+            {
+                "title": _("Principal"),
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+
+            {
+                "title": _("Utilizadores"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Utilizadores do sistema"),
+                        "icon": "people",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": _("Grupos e permissões"),
+                        "icon": "admin_panel_settings",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                ],
+            },
+
+            {
+                "title": _("Gestão Académica"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Alunos"),
+                        "icon": "school",
+                        "link": reverse_lazy("admin:accounts_student_changelist"),
+                    },
+                    {
+                        "title": _("Professores"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:accounts_teacher_changelist"),
+                    },
+                    {
+                        "title": _("Cursos"),
+                        "icon": "menu_book",
+                        "link": reverse_lazy("admin:academics_course_changelist"),
+                    },
+                    {
+                        "title": _("Disciplinas"),
+                        "icon": "library_books",
+                        "link": reverse_lazy("admin:academics_subject_changelist"),
+                    },
+                    {
+                        "title": _("Anos letivos"),
+                        "icon": "calendar_month",
+                        "link": reverse_lazy("admin:academics_academicyear_changelist"),
+                    },
+                    {
+                        "title": _("Turmas"),
+                        "icon": "groups",
+                        "link": reverse_lazy("admin:academics_group_changelist"),
+                    },
+                    {
+                        "title": _("Atribuições de professores"),
+                        "icon": "assignment_ind",
+                        "link": reverse_lazy(
+                            "admin:academics_teacherassignment_changelist"
+                        ),
+                    },
+                ],
+            },
+
+            {
+                "title": _("Matrículas"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Matrículas dos alunos"),
+                        "icon": "how_to_reg",
+                        "link": reverse_lazy(
+                            "admin:enrollments_enrollment_changelist"
+                        ),
+                    },
+                ],
+            },
+
+            {
+                "title": _("Avaliações e Notas"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Tipos de avaliação"),
+                        "icon": "category",
+                        "link": reverse_lazy(
+                            "admin:grades_evaluation_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Avaliações académicas"),
+                        "icon": "assignment",
+                        "link": reverse_lazy(
+                            "admin:grades_academicevaluation_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Notas"),
+                        "icon": "grading",
+                        "link": reverse_lazy(
+                            "admin:grades_grade_changelist"
+                        ),
+                    },
+
+                      {
+                        "title": _("Pautas"),
+                        "icon": "grading",
+                        "link": reverse_lazy(
+                            "admin:grades_gradebook_changelist"
+                        ),
+                    },
+                ],
+            },
+        ],
+    },
+
+    "SHOW_LANGUAGE": True,
+}

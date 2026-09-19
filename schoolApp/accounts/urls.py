@@ -8,8 +8,11 @@ urlpatterns = [
 
     # DASHBOARD DO PROFESSOR
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/perfil/', views.teacher_profile, name='teacher_profile'),
     path('teacher/assignment/<int:assignment_id>/students/', views.teacher_students, name='teacher_students'),
 
+    # CORREÇÃO: acrescentado <int:trimester>/ — a view agora precisa
+    # deste parâmetro para saber de que trimestre mostrar as notas/média.
     path(
         'teacher/assignment/<int:assignment_id>/student/<int:student_id>/grades/<int:trimester>/',
         views.teacher_student_grades,
@@ -24,8 +27,9 @@ urlpatterns = [
 
     # DASHBOARD DO ALUNO
     path('student/', views.student_dashboard, name='student_dashboard'),
+    path('student/perfil/', views.student_profile, name='student_profile'),
 
-    #  'sudent' -> 'student' (typo no path) + <int:trimester>/
+    # CORREÇÃO: 'sudent' -> 'student' (typo no path) + <int:trimester>/
     path(
         'student/enrollment/<int:enrollment_id>/grades/<int:trimester>/',
         views.student_grades,

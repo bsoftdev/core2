@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'teacher/base_teacher.html' %}
 
 {% block title %}Notas | {{ enrollment.student.user.get_full_name }}{% endblock %}
 
-{% block content %}
+{% block teacher_content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="h4 fw-bold mb-0">Notas do Aluno</h2>
@@ -75,8 +75,8 @@
                                 <td><span class="badge bg-secondary">{{ item.evaluation.evaluation.get_type_display }}</span></td>
                                 <td>{{ item.evaluation.evaluation.gradeWeight|floatformat:0 }}%</td>
                                 <td>
-                                    {% if item.evaluation.date %}
-                                        {{ item.evaluation.date|date:"d/m/Y" }}
+                                    {% if item.grade.updated_at %}
+                                        {{ item.grade.updated_at|date:"d/m/Y" }}
                                     {% else %}
                                         <span class="text-muted">—</span>
                                     {% endif %}

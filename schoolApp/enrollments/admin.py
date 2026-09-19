@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Enrollment
 from grades.models import Grade, AcademicEvaluation
+from unfold.admin import ModelAdmin
 
 
 # GRADEINLINE — mostra as notas de um aluno dentro da página da matrícula
@@ -29,7 +30,7 @@ class GradeInline(admin.TabularInline):
 
 
 @admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin):
+class EnrollmentAdmin(ModelAdmin):
 
     inlines = [GradeInline]
 

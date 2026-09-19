@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'student/base_student.html' %}
 
 {% block title %}Área do Estudante{% endblock %}
 
-{% block content %}
+{% block student_content %}
 
 <!-- Cabeçalho / Saudação -->
 <div class="mb-4 p-3 bg-light rounded-4 d-flex align-items-center justify-content-between">
@@ -18,42 +18,11 @@
     </div>
 </div>
 
-<!-- Dados do estudante -->
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-3">
-        <h6 class="text-muted text-uppercase small fw-semibold mb-3">
-            <i class="bi bi-person-vcard me-1 text-primary"></i> Meus Dados
-        </h6>
-
-        <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <div class="bg-light p-3 rounded-3 d-flex align-items-center">
-                    <i class="bi bi-person-badge text-primary fs-4 me-3"></i>
-                    <div>
-                        <span class="text-muted d-block small text-uppercase fw-semibold">Nome Completo</span>
-                        <span class="text-dark fw-medium">{{ student.user.get_full_name }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <div class="bg-light p-3 rounded-3 d-flex align-items-center">
-                    <i class="bi bi-person-fill-gear text-primary fs-4 me-3"></i>
-                    <div>
-                        <span class="text-muted d-block small text-uppercase fw-semibold">Nome de Utilizador</span>
-                        <span class="text-dark fw-medium">{{ student.user.username }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Matrículas -->
-<div class="card border-0 shadow-sm rounded-4">
+<div class="card border-0 shadow-sm rounded-4" id="turmas">
     <div class="card-body p-3">
         <h6 class="text-muted text-uppercase small fw-semibold mb-3">
-            <i class="bi bi-journal-bookmark-fill me-1 text-primary"></i> Minhas Matrículas
+            <i class="bi bi-journal-bookmark-fill me-1 text-primary"></i> Minhas Turmas
         </h6>
 
         {% if enrollments %}
@@ -62,13 +31,25 @@
                     <div class="col-12 col-md-6">
                         <div class="card h-100 border-start border-primary border-4 rounded-3 shadow-none bg-light">
                             <div class="card-body p-3">
-                                <h6 class="fw-bold text-dark mb-2">{{ enrollment.group.course.name }}</h6>
-                                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 rounded-2 small">
-                                        <i class="bi bi-people me-1"></i> Turma: <strong>{{ enrollment.group.designation }}</strong>
+                                <h6 class="mb-4">Curso: <strong class="text-dark">{{ enrollment.group.course.name }}</strong></h6>
+
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-people-fill me-1"></i> Turma: <strong class="text-dark">{{ enrollment.group.designation }}</strong>
+                                </p>
+
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-mortarboard-fill me-1"></i> Classe: <strong class="text-dark">{{ enrollment.group.course_year }}ª </strong>
+                                </p>
+
+                                 <p class="text-muted small mb-3">
+                                    <i class="bi bi-calendar-check me-1"></i> Ano Lectivo: <strong class="text-dark">{{ enrollment.group.academic_year }}</strong>
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span class="badge bg-{% if enrollment.status == 'ATIVA' %}success{% else %}secondary{% endif %}-subtle text-{% if enrollment.status == 'ATIVA' %}success{% else %}secondary{% endif %}-emphasis px-2 py-1 rounded-2 small">
+                                        {{ enrollment.get_status_display }}
                                     </span>
-                                    <!-- CORREÇÃO: a rota agora precisa também do trimestre.
-                                         Mostramos um seletor com os 3 trimestres. -->
+
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                             Ver notas
