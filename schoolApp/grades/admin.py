@@ -3,12 +3,14 @@ from django.urls import path, reverse
 from django.shortcuts import render, get_object_or_404
 from django.utils.html import format_html
 from django.utils import timezone
+from unfold.admin import ModelAdmin
 
 from .models import Evaluation, AcademicEvaluation, Grade, GradeBook
+from .forms import GradeAdminForm
 
 
 @admin.register(Evaluation)
-class EvaluationAdmin(admin.ModelAdmin):
+class EvaluationAdmin(ModelAdmin):
     list_display = ('type', 'name', 'gradeWeight', 'is_active')
     list_filter = ('type', 'is_active')
     search_fields = ('name', 'type')
@@ -16,7 +18,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
 
 @admin.register(AcademicEvaluation)
-class AcademicEvaluationAdmin(admin.ModelAdmin):
+class AcademicEvaluationAdmin(ModelAdmin):
     list_display = ('evaluation', 'subject', 'group', 'trimester', 'date', 'is_active')
     list_filter = ('evaluation', 'subject', 'group', 'trimester', 'is_active')
     search_fields = ('subject__name', 'subject__code', 'group__designation')
@@ -25,16 +27,11 @@ class AcademicEvaluationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Grade)
-class GradeAdmin(admin.ModelAdmin):
-    # CORREÇÃO: 'avaluation' -> 'academic_evaluation' em todo o lado
-    # abaixo, porque o campo do model foi renomeado (Grade agora liga-se
-    # a AcademicEvaluation, não a Evaluation).
+class GradeAdmin(ModelAdmin):
+    form = GradeAdminForm
+
     list_display = ('enrollment', 'academic_evaluation', 'value', 'created_at', 'updated_at')
 
-    # CORREÇÃO ADICIONAL: como agora há dois saltos
-    # (Grade -> AcademicEvaluation -> Evaluation), 'type'/'name'/'gradeWeight'
-    # deixaram de estar diretamente em 'academic_evaluation' — estão em
-    # 'academic_evaluation__evaluation'.
     list_filter = (
         'academic_evaluation__evaluation__type',
         'academic_evaluation__trimester',
@@ -48,7 +45,13 @@ class GradeAdmin(admin.ModelAdmin):
         'academic_evaluation__subject__name',
     )
 
-    autocomplete_fields = ('enrollment', 'academic_evaluation')
+    # CORREÇÃO: 'academic_evaluation' saiu daqui de propósito — como o
+    # GradeAdminForm já filtra o queryset deste campo pela turma da
+    # matrícula escolhida, mantê-lo em autocomplete_fields fazia a
+    # pesquisa ignorar esse filtro (ia buscar sugestões a todas as
+    # turmas via AJAX). Sem autocomplete, o campo vira um <select>
+    # normal, mas respeita mesmo a restrição do form.
+    autocomplete_fields = ('enrollment',)
 
     ordering = (
         'academic_evaluation__group',
@@ -59,8 +62,6 @@ class GradeAdmin(admin.ModelAdmin):
 
 @admin.action(description="Publicar Pautas Selecionadas")
 def post_gradebooks(modeladmin, request, queryset):
-    # CORREÇÃO: 'created_at' -> 'posted_at' (o campo foi renomeado para
-    # refletir melhor o que representa: a data em que a pauta foi publicada).
     updated = queryset.filter(posted=False).update(
         posted=True,
         posted_at=timezone.now(),
@@ -78,7 +79,7 @@ def unpost_gradebooks(modeladmin, request, queryset):
 
 
 @admin.register(GradeBook)
-class GradeBookAdmin(admin.ModelAdmin):
+class GradeBookAdmin(ModelAdmin):
 
     actions = (post_gradebooks, unpost_gradebooks)
 
@@ -99,9 +100,6 @@ class GradeBookAdmin(admin.ModelAdmin):
             'student__user'
         ).order_by('student__user__first_name', 'student__user__last_name')
 
-        # CORREÇÃO: usa AcademicEvaluation (que tem subject/group/trimester),
-        # não Evaluation. E agora filtra também pelo trimestre da pauta —
-        # uma pauta é sempre de UM trimestre específico.
         academic_evaluations = AcademicEvaluation.objects.filter(
             subject=gradebook.subject,
             group=gradebook.group,
@@ -109,7 +107,6 @@ class GradeBookAdmin(admin.ModelAdmin):
             is_active=True,
         ).select_related('evaluation').order_by('evaluation__type')
 
-        # Todas as notas da turma/disciplina/trimestre numa única query.
         all_grades = Grade.objects.filter(
             enrollment__in=enrollments,
             academic_evaluation__in=academic_evaluations,

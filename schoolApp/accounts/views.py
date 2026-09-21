@@ -116,7 +116,7 @@ def teacher_profile(request):
 
         elif 'change_password' in request.POST:
             # SEGURANÇA: PasswordChangeForm exige a senha atual antes de
-            # aceitar a nova — evita que alguém com a sessão aberta
+            # aceitar a nova — evita que  alguém com a sessão aberta
             # (mas sem saber a senha) a troque sem mais nem menos.
             password_form = BootstrapPasswordChangeForm(user=request.user, data=request.POST)
             if password_form.is_valid():

@@ -3,10 +3,10 @@ from .models import Student, Teacher
 from enrollments.models import Enrollment
 from .forms import StudentUserFormAdmin, TeacherUserFormAdmin
 from academics.models import TeacherAssignment
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 
 
-class EnrollmentInline(admin.TabularInline):
+class EnrollmentInline(TabularInline):
     model = Enrollment
     extra = 0
     fields = ('id', 'group', 'status', 'created_at')
@@ -40,7 +40,7 @@ class StudentAdmin(ModelAdmin):
         return obj.user.username
 
 
-class TeacherAssignmentInline(admin.TabularInline):
+class TeacherAssignmentInline(TabularInline):
     model = TeacherAssignment
     extra = 0
     fields = ('subject', 'group', 'date_assignment', 'is_active')
@@ -70,7 +70,6 @@ class TeacherAdmin(ModelAdmin):
     @admin.display(description='Nº de Funcionário')
     def employee_number(self, obj):
         return obj.id
-
 
     @admin.display(description='Nome de Usuário')
     def username(self, obj):

@@ -1,0 +1,216 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold log %}
+
+{% block title %}
+    {% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+
+    <!-- ===================================================== -->
+    <!-- CARTÕES DE INDICADORES (KPIs)
+         CORREÇÃO: em vez do parâmetro icon= do card.html (que
+         desalinhava com o texto), o ícone e o texto são montados
+         manualmente dentro do card, com flex + items-center — dá
+         controlo total do alinhamento e permite uma cor própria
+         por indicador (com significado: verde=positivo, âmbar/
+         vermelho=precisa de atenção). -->
+    <!-- ===================================================== -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+
+        {% trans "Alunos" as label_students %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                    <span class="material-symbols-outlined text-2xl">school</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_students }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ total_students }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+        {% trans "Professores" as label_teachers %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_teachers }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ total_teachers }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+        {% trans "Turmas" as label_groups %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                    <span class="material-symbols-outlined text-2xl">groups</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_groups }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ total_groups }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+        {% trans "Matrículas Ativas" as label_enrollments %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">
+                    <span class="material-symbols-outlined text-2xl">how_to_reg</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_enrollments }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ total_active_enrollments }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+        {% trans "Notas Lançadas" as label_grades %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
+                    <span class="material-symbols-outlined text-2xl">grading</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_grades }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ total_grades }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+        {% trans "Pautas por Publicar" as label_gradebooks %}
+        {% component "unfold/components/card.html" %}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center shrink-0 rounded-xl w-12 h-12 bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
+                    <span class="material-symbols-outlined text-2xl">fact_check</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm text-base-500 dark:text-base-400">{{ label_gradebooks }}</span>
+                    <span class="text-2xl font-semibold text-base-900 dark:text-base-100">{{ pending_gradebooks }}</span>
+                </div>
+            </div>
+        {% endcomponent %}
+
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- GRÁFICOS -->
+    <!-- ===================================================== -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+        {% trans "Alunos por Curso" as title_by_course %}
+        {% component "unfold/components/card.html" with title=title_by_course %}
+            {% component "unfold/components/chart/bar.html" with component_class="EnrollmentsByCourseChart" %}{% endcomponent %}
+        {% endcomponent %}
+
+        <!--
+            CORREÇÃO: "Matrículas por Estado" passou a doughnut.
+            O componente de gráficos do Unfold só suporta barra/linha
+            (é uma limitação conhecida deles, não algo que dava para
+            contornar via chart/bar.html sem quebrar o render). Como o
+            Chart.js já vem carregado pelo próprio Unfold, desenhamos
+            este com um <canvas> + script diretos — mesma biblioteca,
+            só sem passar pelo componente limitado.
+        -->
+        {% trans "Matrículas por Estado" as title_by_status %}
+        {% component "unfold/components/card.html" with title=title_by_status %}
+            <div style="height: 280px; position: relative;">
+                <canvas id="statusDoughnutChart"></canvas>
+            </div>
+        {% endcomponent %}
+
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+        {% trans "Distribuição de Notas (0-20)" as title_grades %}
+        {% component "unfold/components/card.html" with title=title_grades %}
+            {% component "unfold/components/chart/bar.html" with component_class="GradeDistributionChart" %}{% endcomponent %}
+        {% endcomponent %}
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- AÇÕES RECENTES — mecanismo nativo do Django Admin -->
+    <!-- ===================================================== -->
+    {% trans "Ações Recentes" as title_recent %}
+    {% component "unfold/components/card.html" with title=title_recent %}
+        {% get_admin_log 10 as admin_log for_user user %}
+        {% if not admin_log %}
+            <p class="text-sm text-base-500">{% trans "Nenhuma ação recente." %}</p>
+        {% else %}
+            <ul class="flex flex-col gap-3">
+                {% for entry in admin_log %}
+                    <li class="text-sm flex items-center gap-2">
+                        {% if entry.is_addition %}
+                            <span class="material-symbols-outlined text-base" style="color: #16a34a;">add_circle</span>
+                        {% elif entry.is_change %}
+                            <span class="material-symbols-outlined text-base" style="color: #2563eb;">edit</span>
+                        {% elif entry.is_deletion %}
+                            <span class="material-symbols-outlined text-base" style="color: #dc2626;">delete</span>
+                        {% endif %}
+                        <span>
+                            {% if entry.is_deletion %}
+                                {{ entry.object_repr }}
+                            {% else %}
+                                <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                            {% endif %}
+                        </span>
+                        <span class="text-base-400">— {{ entry.content_type.name|capfirst }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endcomponent %}
+
+</div>
+
+{{ enrollment_status_labels|json_script:"status-labels-data" }}
+{{ enrollment_status_data|json_script:"status-values-data" }}
+{{ enrollment_status_colors|json_script:"status-colors-data" }}
+
+<script>
+    (function () {
+        const labels = JSON.parse(document.getElementById('status-labels-data').textContent);
+        const values = JSON.parse(document.getElementById('status-values-data').textContent);
+        const colors = JSON.parse(document.getElementById('status-colors-data').textContent);
+        const canvas = document.getElementById('statusDoughnutChart');
+
+        if (canvas && window.Chart) {
+            new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, padding: 14 },
+                        },
+                    },
+                },
+            });
+        }
+    })();
+</script>
+
+{% endblock %}

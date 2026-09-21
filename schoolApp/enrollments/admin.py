@@ -1,20 +1,19 @@
 from django.contrib import admin
 from .models import Enrollment
 from grades.models import Grade, AcademicEvaluation
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 
 
 # GRADEINLINE — mostra as notas de um aluno dentro da página da matrícula
-class GradeInline(admin.TabularInline):
+class GradeInline(TabularInline):
     model = Grade
     extra = 0
-    # CORREÇÃO: 'avaluation' -> 'academic_evaluation' (nome do campo mudou).
     fields = ('academic_evaluation', 'value', 'observation', 'created_at')
     readonly_fields = ('observation', 'created_at')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Filtra as avaliações para mostrar apenas as da turma da matrícula."""
-        
+
         if db_field.name == "academic_evaluation":
             resolved = request.resolver_match
             if resolved and resolved.kwargs.get('object_id'):
@@ -46,5 +45,3 @@ class EnrollmentAdmin(ModelAdmin):
     @admin.display(description='Nº de Matrícula')
     def enrollment_number(self, obj):
         return obj.id
-
-   

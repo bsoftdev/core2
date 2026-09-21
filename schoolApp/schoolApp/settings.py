@@ -40,8 +40,10 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+      
+      'unfold',
+    
     #'jazzmin',
-    "unfold",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -143,21 +145,24 @@ STATICFILES_DIRS = [
 ]
 
 
+
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 
+#ESTILIZAÇÃO DO ADMINISTRADOR COM UNFOLD
 UNFOLD = {
     # Identidade do sistema
-    "SITE_TITLE": "SchoolApp | Gestão Académica",
+    "SITE_TITLE": " BSOFT SCHOOL | Gestão Académica",
     "SITE_HEADER": "BSOFT SCHOOL",
-    "SITE_SUBHEADER": "Sistema de Gestão Académica",
+    "SITE_SUBHEADER": "SIGAcadémica",
     "SITE_VERSION": "1.0.0",
     "SITE_URL": "/",
 
     # Ícone e símbolo do sistema
     "SITE_SYMBOL": "school",
+     "DASHBOARD_CALLBACK": "schoolApp.dashboard.dashboard_callback",
 
     # Opções da interface
     "SHOW_HISTORY": True,
@@ -165,56 +170,71 @@ UNFOLD = {
     "SHOW_BACK_BUTTON": True,
     "SHOW_UI_WARNINGS": False,
 
-    # Tema
-    "THEME": "light",
+    # CORREÇÃO: removido "THEME": "light". Ao forçar um tema único, o
+    # seletor de dark mode desaparece da interface. Deixando por
+    # definir, o Unfold mostra o alternador de tema (claro/escuro) —
+    # é o comportamento "moderno" esperado num admin atual, e cada
+    # utilizador escolhe o que prefere sem afetar os outros.
 
-    # Estilos personalizados
+    # Estilos e scripts personalizados
     "STYLES": [
         lambda request: static("css/style.css"),
     ],
-
-    # Scripts personalizados
     "SCRIPTS": [
         lambda request: static("js/script.js"),
     ],
 
-    # Arredondamento dos elementos
-    "BORDER_RADIUS": "8px",
+    # CORREÇÃO: 8px -> 10px. Um raio ligeiramente maior dá um ar mais
+    # suave/atual aos cartões e botões (efeito usado por interfaces
+    # modernas como Linear, Notion), sem exagerar a ponto de parecer
+    # "bolha".
+    "BORDER_RADIUS": "10px",
 
-    # Cores do sistema
+    # Cores do sistema — paleta azul limpa e profissional, adequada a
+    # um contexto académico/institucional (transmite confiança e
+    # neutralidade, ao contrário de tons mais "vivos" como roxo/verde).
     "COLORS": {
+        # Base neutra (cinza-azulado) — usada em texto, bordas, fundos.
+        # Mantida igual ao exemplo oficial do Unfold: é a escala que
+        # o próprio tema usa para garantir bom contraste em claro/escuro.
         "base": {
-            "50": "oklch(98% .003 247)",
-            "100": "oklch(96% .005 247)",
-            "200": "oklch(92% .008 247)",
-            "300": "oklch(86% .012 247)",
-            "400": "oklch(70% .018 247)",
-            "500": "oklch(55% .025 247)",
-            "600": "oklch(43% .03 247)",
-            "700": "oklch(34% .035 247)",
-            "800": "oklch(25% .035 247)",
-            "900": "oklch(18% .03 247)",
-            "950": "oklch(12% .025 247)",
+            "50": "oklch(98.5% .002 247.839)",
+            "100": "oklch(96.7% .003 264.542)",
+            "200": "oklch(92.8% .006 264.531)",
+            "300": "oklch(87.2% .01 258.338)",
+            "400": "oklch(70.7% .022 261.325)",
+            "500": "oklch(55.1% .027 264.364)",
+            "600": "oklch(44.6% .03 256.802)",
+            "700": "oklch(37.3% .034 259.733)",
+            "800": "oklch(27.8% .033 256.848)",
+            "900": "oklch(21% .034 264.665)",
+            "950": "oklch(13% .028 261.692)",
         },
 
+        # Cor primária — azul limpo (em vez do tom mais frio/acinzentado
+        # que tinhas), com progressão suave do claro ao escuro.
         "primary": {
-            "50": "oklch(97% .015 245)",
-            "100": "oklch(93% .03 245)",
-            "200": "oklch(87% .06 245)",
-            "300": "oklch(78% .10 245)",
-            "400": "oklch(68% .15 245)",
-            "500": "oklch(58% .19 245)",
-            "600": "oklch(50% .20 245)",
-            "700": "oklch(42% .18 245)",
-            "800": "oklch(34% .15 245)",
-            "900": "oklch(27% .12 245)",
-            "950": "oklch(20% .09 245)",
+            "50": "oklch(97.7% .014 254)",
+            "100": "oklch(94.6% .033 254)",
+            "200": "oklch(90.2% .063 254)",
+            "300": "oklch(82.7% .119 254)",
+            "400": "oklch(71.4% .18 254)",
+            "500": "oklch(62.7% .22 254)",
+            "600": "oklch(55.8% .24 254)",
+            "700": "oklch(49.6% .22 254)",
+            "800": "oklch(43.8% .19 254)",
+            "900": "oklch(38.1% .15 254)",
+            "950": "oklch(29.1% .13 254)",
         },
 
+        # CORREÇÃO: mapeamento de texto alinhado com a recomendação
+        # oficial do Unfold (usavas 700/400 no "default", a doc
+        # recomenda 600/300 — dá texto ligeiramente mais claro/legível
+        # em ambos os temas, sem perder contraste com o fundo).
         "font": {
             "subtle-light": "var(--color-base-500)",
             "subtle-dark": "var(--color-base-400)",
-            "default-light": "var(--color-base-700)",
+            "default-light": "var(--color-base-600)",
             "default-dark": "var(--color-base-300)",
             "important-light": "var(--color-base-900)",
             "important-dark": "var(--color-base-100)",
@@ -344,10 +364,12 @@ UNFOLD = {
                             "admin:grades_grade_changelist"
                         ),
                     },
-
-                      {
+                    {
+                        # CORREÇÃO: ícone repetido ("grading", igual ao
+                        # de "Notas" acima) — trocado por "fact_check",
+                        # mais distinto visualmente na sidebar.
                         "title": _("Pautas"),
-                        "icon": "grading",
+                        "icon": "fact_check",
                         "link": reverse_lazy(
                             "admin:grades_gradebook_changelist"
                         ),

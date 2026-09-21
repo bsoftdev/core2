@@ -11,16 +11,18 @@
                     <i class="bi bi-house-door-fill me-1"></i> Início
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link px-3 py-3 fw-semibold text-body-secondary"
-                   href="{% url 'teacher_dashboard' %}#turmas">
-                    <i class="bi bi-journal-bookmark-fill me-1"></i> Minhas Turmas
-                </a>
-            </li>
+            
             <li class="nav-item">
                 <a class="nav-link px-3 py-3 fw-semibold {% if request.resolver_match.url_name == 'teacher_profile' %}active{% else %}text-body-secondary{% endif %}"
                    href="{% url 'teacher_profile' %}">
                     <i class="bi bi-person-fill me-1"></i> Perfil
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link px-3 py-3 fw-semibold text-body-secondary"
+                   href="{% url 'teacher_dashboard' %}#turmas">
+                    <i class="bi bi-bell-fill me-1"></i> Notificações
                 </a>
             </li>
         </ul>
@@ -47,14 +49,7 @@
             </a>
         </div>
 
-        <div class="col-3">
-            <a href="{% url 'teacher_dashboard' %}#turmas"
-               class="d-flex flex-column align-items-center text-decoration-none py-1 text-muted">
-                <i class="bi bi-journal-bookmark fs-5"></i>
-                <span style="font-size: 11px;">Turmas</span>
-            </a>
-        </div>
-
+       
         <div class="col-3">
             <a href="{% url 'teacher_profile' %}"
                class="d-flex flex-column align-items-center text-decoration-none py-1 {% if request.resolver_match.url_name == 'teacher_profile' %}text-primary{% else %}text-muted{% endif %}">
@@ -62,6 +57,15 @@
                 <span style="font-size: 11px;">Perfil</span>
             </a>
         </div>
+
+         <div class="col-3">
+            <a href="{% url 'teacher_dashboard' %}#turmas"
+               class="d-flex flex-column align-items-center text-decoration-none py-1 text-muted">
+                <i class="bi bi-bell-fill fs-5"></i>
+                <span style="font-size: 11px;">Notificações</span>
+            </a>
+        </div>
+
 
         <div class="col-3">
             <a href="{% url 'logout' %}"
