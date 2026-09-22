@@ -41,8 +41,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
       
-      'unfold',
-    
+    'unfold',
     #'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -61,6 +60,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -121,19 +121,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'pt-pt'
-
 TIME_ZONE = 'Africa/Luanda'
-
 USE_I18N = True
-
 USE_TZ = True
 
-LANGUAGES = [ 
+LANGUAGES = [
     ("pt", "Portuguese"),
     ("en", "English"),
+    ("fr", "French"),
+    ("es", "Spanish"),
+    ("de", "German"),
+    ("it", "Italian"),
+    ("zh-hans", "Chinese"),
+    ("ru", "Russian"),
+    ("ar", "Arabic"), 
 ]
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -143,7 +145,6 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR/'static',
 ]
-
 
 
 LOGIN_URL = 'login'
@@ -379,5 +380,5 @@ UNFOLD = {
         ],
     },
 
-    "SHOW_LANGUAGE": True,
+    "SHOW_LANGUAGES": True,
 }
