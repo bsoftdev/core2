@@ -1,7 +1,6 @@
-# Sistema Académico — Gestão Escolar (Django)
+# Sistema Acadêmico — Gestão Escolar (Python-Django)
 
-Sistema de gestão escolar desenvolvido em **Django**, pensado para uma escola única, com áreas dedicadas para **Aluno**, **Professor** e **Administrador**. Cobre o ciclo académico completo: cursos, disciplinas, turmas, matrículas, avaliações e notas por trimestre.
-
+Sistema de gestão escolar sendo desenvolvido em Django, pensado para uma escola única, com áreas dedicadas para Aluno, Professor e Administrador. Cobre o ciclo acadêmico completo: cursos, disciplinas, turmas, matrículas, avaliações , notas por trimestre, chat de comunicação acadêmica, mural da escola(Blog Post) ,  modulo financeiro (Pagamento de propinas),  registo de presencas, etc.
 ---
 
 ## ✨ Funcionalidades atuais
