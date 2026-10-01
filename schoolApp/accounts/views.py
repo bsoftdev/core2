@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count
+from django_ratelimit.decorators import ratelimit
 
 from .utils import teacher_required, student_required
 from .forms import StudentContactForm, TeacherContactForm, BootstrapPasswordChangeForm
@@ -16,6 +17,12 @@ from .models import Student, Teacher
 
 
 # LOGIN
+# CORREÇÃO: rate limiting explícito por IP — mesmo com o django-axes a
+# bloquear por username+IP após tentativas falhadas, isto dá uma camada
+# extra que corta pedidos em rajada (ex: um bot a tentar 100 usernames
+# diferentes rapidamente, onde o axes ainda não teria bloqueado nenhum
+# username específico 5 vezes).
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def login_view(request):
 
     if request.user.is_authenticated:
@@ -30,7 +37,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return redirect('dashboard')
-
+            
         messages.error(request, 'Usuário ou senha incorretos.')
 
     return render(request, 'accounts/login.html')
@@ -116,7 +123,7 @@ def teacher_profile(request):
 
         elif 'change_password' in request.POST:
             # SEGURANÇA: PasswordChangeForm exige a senha atual antes de
-            # aceitar a nova — evita que  alguém com a sessão aberta
+            # aceitar a nova — evita que alguém com a sessão aberta
             # (mas sem saber a senha) a troque sem mais nem menos.
             password_form = BootstrapPasswordChangeForm(user=request.user, data=request.POST)
             if password_form.is_valid():

@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 #PRODUCTION ENVIROMENT
 #DEBUG = False
-#ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+#ALLOWED_HOSTS = ['127.0.0.1', 'www.school.com']
 
 
 # Application definition
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'academics',
     'enrollments',
     'grades',
+    'axes',  #axes' (deve vir perto do fim), para seguranca, brute force, instalado atraves de pipenv install django-axes django-ratelimit python-decouple
 ]
 
 MIDDLEWARE = [
@@ -66,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "axes.middleware.AxesMiddleware", #sempre no ultimo
 ]
 
 ROOT_URLCONF = 'schoolApp.urls'
@@ -118,6 +120,64 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+ 
+# =========================================================
+# 3. AUTHENTICATION_BACKENDS — AxesStandaloneBackend TEM de
+#    ser o primeiro, senão o axes não intercepta o login
+# =========================================================
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",  # tem de ser o primeiro
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+
+# =========================================================
+# 4. CONFIGURAÇÃO DO DJANGO-AXES (bloqueio por tentativas falhadas)
+# =========================================================
+AXES_FAILURE_LIMIT = 3             # bloqueia ao fim de 3 tentativas erradas
+AXES_COOLOFF_TIME = 0.25               # desbloqueia automaticamente ao fim de 15 minutos
+AXES_LOCKOUT_PARAMETERS = ["username"]  # bloqueia por username+IP
+AXES_RESET_ON_SUCCESS = True        # um login correto reinicia o contador
+
+
+# =========================================================
+# 5. COOKIES E SESSÃO
+# =========================================================
+SESSION_COOKIE_HTTPONLY = True      # JavaScript não consegue ler o cookie de sessão
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 60 * 1    # sessão expira ao fim de 1h de inatividade
+
+
+# =========================================================
+# 6. CABEÇALHOS HTTP DE SEGURANÇA
+# ==========================================    ===============
+X_FRAME_OPTIONS = "DENY"                    # impede que o site seja carregado num <iframe> (clickjacking)
+SECURE_CONTENT_TYPE_NOSNIFF = True          # impede o browser de "adivinhar" tipos de ficheiro
+SECURE_BROWSER_XSS_FILTER = True            # proteção extra em browsers antigos
+ 
+# Em produção, com HTTPS configurado, ativa também estas:
+# SECURE_SSL_REDIRECT = True
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+ 
+ 
+# =========================================================
+# 7. SECRET_KEY E CREDENCIAIS FORA DO CÓDIGO
+#    Cria um ficheiro .env na raiz do projeto (nunca no GitHub!)
+#    com: SECRET_KEY=a-tua-chave-aqui
+# =========================================================
+# from decouple import config
+# SECRET_KEY = config("SECRET_KEY")
+# DEBUG = config("DEBUG", default=False, cast=bool)
+
+
+ 
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -135,6 +195,7 @@ LANGUAGES = [
     ("zh-hans", "Chinese"),
     ("ru", "Russian"),
     ("ar", "Arabic"), 
+    ("pt-br", "Brazilian Portuguese"), 
 ]
 
 # Static files (CSS, JavaScript, Images)
@@ -382,3 +443,6 @@ UNFOLD = {
 
     "SHOW_LANGUAGES": True,
 }
+
+
+

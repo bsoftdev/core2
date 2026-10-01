@@ -91,6 +91,7 @@ class GroupAdmin(ModelAdmin):
 
 
 
+
     @admin.action(description='Gerar avaliações - 1º Trimestre')
     def generate_first_trimester(self, request, queryset):
         self._generate_evaluations(request, queryset, 1)

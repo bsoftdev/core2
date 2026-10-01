@@ -60,6 +60,8 @@ class GradeAdmin(ModelAdmin):
     )
 
 
+
+
 @admin.action(description="Publicar Pautas Selecionadas")
 def post_gradebooks(modeladmin, request, queryset):
     updated = queryset.filter(posted=False).update(

@@ -13,8 +13,8 @@
 <!-- CARTÕES DE RESUMO -->
 <div class="row g-3 mb-4 mt-3">
 
-    <div class="col-6 col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
+    <div class="col-6 col-md-4 ">
+        <div class="card border-0 shadow-sm  rounded-4 h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center"
                      style="width: 48px; height: 48px;">
@@ -76,25 +76,33 @@
         <h5 class="mb-0">Minhas Disciplinas e Turmas</h5>
     </div>
 
-    <div class="card-body pt-0">
+    <div class="card-body pt-2">
         {% if assignments %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <div class="table-responsive  ">
+                <table class="table table-hover  table-striped align-middle mb-0">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Disciplina</th>
                             <th>Turma</th>
+                            <th>Classe</th>
+                            <th>Ano Lectivo</th>
+                            <th>Curso</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for assignment in assignments %}
                         <tr>
-                            <td>{{ assignment.subject }}</td>
-                            <td>{{ assignment.group }}</td>
+                            <td>{{forloop.counter }}</td>
+                            <td>{{ assignment.subject.name }}</td>
+                            <td>{{ assignment.group.designation}}</td>
+                            <td>{{ assignment.group.course_year}}ª</td>
+                            <td>{{ assignment.group.academic_year}}</td>
+                            <td>{{ assignment.group.course.name}}</td>
                             <td class="text-end">
                                 <a href="{% url 'teacher_students' assignment.id %}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-people"></i> Ver alunos
+                                    <i class="bi bi-people-fill"></i> Ver alunos
                                 </a>
                             </td>
                         </tr>
@@ -127,6 +135,7 @@
                 data: groupsSummary.map(g => g.total),
                 backgroundColor: '#0d6efd',
                 borderRadius: 6,
+                "maxBarThickness": 50,
             }]
         },
         options: {
