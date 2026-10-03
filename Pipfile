@@ -6,9 +6,10 @@ name = "pypi"
 [packages]
 django = "*"
 django-jazzmin = "*"
-django-axes = "*"
 django-ratelimit = "*"
 python-decouple = "*"
+django-axes = "*"
+django-unfold = "*"
 
 [dev-packages]
 
