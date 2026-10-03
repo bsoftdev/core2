@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+
+import dj_database_url
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -20,29 +22,34 @@ from django.utils.translation import gettext_lazy as _
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# =========================================================
+# 1. AMBIENTE (desenvolvimento vs produção)
+#    Localmente: DEBUG=True por defeito.
+#    No Render: a variável RENDER=true é definida automaticamente,
+#    por isso o DEBUG fica False (a menos que definas DEBUG=True).
+# =========================================================
+ON_RENDER = bool(os.environ.get("RENDER"))
+DEBUG = os.environ.get("DEBUG", "False" if ON_RENDER else "True") == "True"
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&#sgfph#3edrif@8ab9q2t_ft0beu)myd%0dphjcf3xhf&(oq2'
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-chave-apenas-para-desenvolvimento-local",
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-#DEVELOPMET  ENVIROMENT
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
-#PRODUCTION ENVIROMENT
-#DEBUG = False
-#ALLOWED_HOSTS = ['127.0.0.1', 'www.school.com']
+CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-      
     'unfold',
-    #'jazzmin',
+    # 'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,16 +57,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #MY APPS
+    # MY APPS
     'accounts',
     'academics',
     'enrollments',
     'grades',
-    'axes',  #axes' (deve vir perto do fim), para seguranca, brute force, instalado atraves de pipenv install django-axes django-ratelimit python-decouple
+    'axes',  # deve vir perto do fim (segurança, brute force)
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # logo a seguir ao SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -67,7 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "axes.middleware.AxesMiddleware", #sempre no ultimo
+    'axes.middleware.AxesMiddleware',  # sempre o último
 ]
 
 ROOT_URLCONF = 'schoolApp.urls'
@@ -75,7 +83,7 @@ ROOT_URLCONF = 'schoolApp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR/'templates'],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,14 +98,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'schoolApp.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# =========================================================
+# 2. BASE DE DADOS
+#    Localmente usa SQLite. No Render usa a DATABASE_URL (Neon).
+#    (Antes havia dois blocos DATABASES e o segundo, SQLite,
+#    sobrepunha-se ao primeiro, por isso o Neon nunca seria usado.)
+# =========================================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
@@ -120,7 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
- 
 # =========================================================
 # 3. AUTHENTICATION_BACKENDS — AxesStandaloneBackend TEM de
 #    ser o primeiro, senão o axes não intercepta o login
@@ -134,10 +144,10 @@ AUTHENTICATION_BACKENDS = [
 # =========================================================
 # 4. CONFIGURAÇÃO DO DJANGO-AXES (bloqueio por tentativas falhadas)
 # =========================================================
-AXES_FAILURE_LIMIT = 3             # bloqueia ao fim de 3 tentativas erradas
-AXES_COOLOFF_TIME = 0.25               # desbloqueia automaticamente ao fim de 15 minutos
-AXES_LOCKOUT_PARAMETERS = ["username"]  # bloqueia por username+IP
-AXES_RESET_ON_SUCCESS = True        # um login correto reinicia o contador
+AXES_FAILURE_LIMIT = 3                  # bloqueia ao fim de 3 tentativas erradas
+AXES_COOLOFF_TIME = 0.25                # desbloqueia ao fim de 15 minutos (em horas)
+AXES_LOCKOUT_PARAMETERS = ["username"]  # bloqueia só por username (atrás do proxy do Render o IP seria sempre o mesmo)
+AXES_RESET_ON_SUCCESS = True            # um login correto reinicia o contador
 
 
 # =========================================================
@@ -148,39 +158,32 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 60 * 60 * 1    # sessão expira ao fim de 1h de inatividade
+SESSION_COOKIE_AGE = 60 * 60 * 1    # sessão expira ao fim de 1h
 
 
 # =========================================================
 # 6. CABEÇALHOS HTTP DE SEGURANÇA
-# ==========================================    ===============
-X_FRAME_OPTIONS = "DENY"                    # impede que o site seja carregado num <iframe> (clickjacking)
-SECURE_CONTENT_TYPE_NOSNIFF = True          # impede o browser de "adivinhar" tipos de ficheiro
-SECURE_BROWSER_XSS_FILTER = True            # proteção extra em browsers antigos
- 
-# Em produção, com HTTPS configurado, ativa também estas:
-# SECURE_SSL_REDIRECT = True
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
- 
- 
 # =========================================================
-# 7. SECRET_KEY E CREDENCIAIS FORA DO CÓDIGO
-#    Cria um ficheiro .env na raiz do projeto (nunca no GitHub!)
-#    com: SECRET_KEY=a-tua-chave-aqui
-# =========================================================
-# from decouple import config
-# SECRET_KEY = config("SECRET_KEY")
-# DEBUG = config("DEBUG", default=False, cast=bool)
+X_FRAME_OPTIONS = "DENY"                # impede o site de ser carregado num <iframe>
+SECURE_CONTENT_TYPE_NOSNIFF = True      # impede o browser de "adivinhar" tipos de ficheiro
+# (SECURE_BROWSER_XSS_FILTER foi removido: já não existe no Django moderno)
 
-
- 
+# Em produção (Render, com HTTPS), ativa automaticamente:
+if not DEBUG:
+    # O Render termina o HTTPS no proxy; isto diz ao Django que o pedido original era seguro
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600  # sobe para 31536000 quando estiveres seguro de que o HTTPS está estável
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
+LANGUAGE_CODE = 'pt'
 TIME_ZONE = 'Africa/Luanda'
 USE_I18N = True
 USE_TZ = True
@@ -194,18 +197,30 @@ LANGUAGES = [
     ("it", "Italian"),
     ("zh-hans", "Chinese"),
     ("ru", "Russian"),
-    ("ar", "Arabic"), 
-    ("pt-br", "Brazilian Portuguese"), 
+    ("ar", "Arabic"),
+    ("pt-br", "Brazilian Portuguese"),
 ]
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# =========================================================
+# 7. FICHEIROS ESTÁTICOS (WhiteNoise)
+# =========================================================
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_DIRS = [
-    BASE_DIR/'static',
-]
+# Se tens uma pasta "static" na raiz do projeto (com css/style.css e js/script.js),
+# ela tem de ser registada aqui, senão o collectstatic não a encontra.
+if (BASE_DIR / "static").exists():
+    STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 
 LOGIN_URL = 'login'
@@ -213,7 +228,7 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 
-#ESTILIZAÇÃO DO ADMINISTRADOR COM UNFOLD
+# ESTILIZAÇÃO DO ADMINISTRADOR COM UNFOLD
 UNFOLD = {
     # Identidade do sistema
     "SITE_TITLE": " BSOFT SCHOOL | Gestão Académica",
@@ -224,7 +239,7 @@ UNFOLD = {
 
     # Ícone e símbolo do sistema
     "SITE_SYMBOL": "school",
-     "DASHBOARD_CALLBACK": "schoolApp.dashboard.dashboard_callback",
+    "DASHBOARD_CALLBACK": "schoolApp.dashboard.dashboard_callback",
 
     # Opções da interface
     "SHOW_HISTORY": True,
@@ -232,11 +247,7 @@ UNFOLD = {
     "SHOW_BACK_BUTTON": True,
     "SHOW_UI_WARNINGS": False,
 
-    # CORREÇÃO: removido "THEME": "light". Ao forçar um tema único, o
-    # seletor de dark mode desaparece da interface. Deixando por
-    # definir, o Unfold mostra o alternador de tema (claro/escuro) —
-    # é o comportamento "moderno" esperado num admin atual, e cada
-    # utilizador escolhe o que prefere sem afetar os outros.
+    # Sem "THEME" forçado: o Unfold mostra o alternador claro/escuro.
 
     # Estilos e scripts personalizados
     "STYLES": [
@@ -246,19 +257,10 @@ UNFOLD = {
         lambda request: static("js/script.js"),
     ],
 
-    # CORREÇÃO: 8px -> 10px. Um raio ligeiramente maior dá um ar mais
-    # suave/atual aos cartões e botões (efeito usado por interfaces
-    # modernas como Linear, Notion), sem exagerar a ponto de parecer
-    # "bolha".
     "BORDER_RADIUS": "10px",
 
-    # Cores do sistema — paleta azul limpa e profissional, adequada a
-    # um contexto académico/institucional (transmite confiança e
-    # neutralidade, ao contrário de tons mais "vivos" como roxo/verde).
+    # Cores do sistema — paleta azul limpa e profissional
     "COLORS": {
-        # Base neutra (cinza-azulado) — usada em texto, bordas, fundos.
-        # Mantida igual ao exemplo oficial do Unfold: é a escala que
-        # o próprio tema usa para garantir bom contraste em claro/escuro.
         "base": {
             "50": "oklch(98.5% .002 247.839)",
             "100": "oklch(96.7% .003 264.542)",
@@ -272,9 +274,6 @@ UNFOLD = {
             "900": "oklch(21% .034 264.665)",
             "950": "oklch(13% .028 261.692)",
         },
-
-        # Cor primária — azul limpo (em vez do tom mais frio/acinzentado
-        # que tinhas), com progressão suave do claro ao escuro.
         "primary": {
             "50": "oklch(97.7% .014 254)",
             "100": "oklch(94.6% .033 254)",
@@ -288,11 +287,6 @@ UNFOLD = {
             "900": "oklch(38.1% .15 254)",
             "950": "oklch(29.1% .13 254)",
         },
-
-        # CORREÇÃO: mapeamento de texto alinhado com a recomendação
-        # oficial do Unfold (usavas 700/400 no "default", a doc
-        # recomenda 600/300 — dá texto ligeiramente mais claro/legível
-        # em ambos os temas, sem perder contraste com o fundo).
         "font": {
             "subtle-light": "var(--color-base-500)",
             "subtle-dark": "var(--color-base-400)",
@@ -427,9 +421,6 @@ UNFOLD = {
                         ),
                     },
                     {
-                        # CORREÇÃO: ícone repetido ("grading", igual ao
-                        # de "Notas" acima) — trocado por "fact_check",
-                        # mais distinto visualmente na sidebar.
                         "title": _("Pautas"),
                         "icon": "fact_check",
                         "link": reverse_lazy(
@@ -443,6 +434,3 @@ UNFOLD = {
 
     "SHOW_LANGUAGES": True,
 }
-
-
-

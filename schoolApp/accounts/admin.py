@@ -78,4 +78,4 @@ class TeacherAdmin(ModelAdmin):
 
 admin.site.site_header = "KIBACO'S CENTER"
 admin.site.site_title = 'BSOFT TECHNOLOGIES'
-admin.site.index_title = 'Painel Administrativo'
+admin.site.index_title = 'DASHBOARD'

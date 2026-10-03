@@ -10,6 +10,10 @@ django-ratelimit = "*"
 python-decouple = "*"
 django-axes = "*"
 django-unfold = "*"
+gunicorn = "*"
+whitenoise = "*"
+dj-database-url = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
