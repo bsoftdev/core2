@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b6d">
+  <title>Sem ligação à Internet</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #f3f6fa;
+      color: #1e293b;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    main {
+      max-width: 360px;
+      padding: 32px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px #0f172a12;
+    }
+
+    h1 {
+      color: #123b6d;
+      font-size: 24px;
+    }
+
+    p {
+      line-height: 1.6;
+      color: #64748b;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #123b6d;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Sem ligação à Internet</h1>
+    <p>
+      Não foi possível ligar ao servidor.
+      Verifica a tua ligação e tenta novamente.
+    </p>
+    <button onclick="location.reload()">
+      Tentar novamente
+    </button>
+  </main>
+</body>
+</html>

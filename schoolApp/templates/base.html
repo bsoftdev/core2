@@ -1,9 +1,28 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="pt">
 
 <head>
 
-    <meta charset="UTF-8">
+    {% load static %}
+
+      {#----------------- ANDOROID WEBVIE------------------------- #}
+        <link rel="manifest"
+            href="{% static 'pwa/manifest.webmanifest' %}">
+
+        <meta name="theme-color" content="#123b6d">
+
+        <meta name="apple-mobile-web-app-capable"
+            content="yes">
+
+        <meta name="apple-mobile-web-app-status-bar-style"
+            content="default">
+
+        <link rel="apple-touch-icon"
+            href="{% static 'pwa/icons/bsoftlogo.jpg' %}">
+        <meta charset="UTF-8">
+{#-------------------------------------------------------#}
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -58,8 +77,9 @@
 
 <!-- CORREÇÃO: bloco novo — necessário para as dashboards com gráficos
      (Chart.js) carregarem o seu próprio script sem duplicar o Bootstrap. -->
-{% block extra_js %}{% endblock %}
 
+{% block extra_js %}{% endblock %}
+<script src="{% static 'pwa/js/pwa.js' %}" defer></script>
 </body>
 
 </html>
